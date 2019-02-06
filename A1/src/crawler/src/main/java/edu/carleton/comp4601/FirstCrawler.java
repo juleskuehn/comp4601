@@ -14,13 +14,14 @@ import edu.uci.ics.crawler4j.url.WebURL;
 
 public class FirstCrawler extends WebCrawler {
 
-    private static final Pattern IMAGE_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png)$");
+    private static final Pattern IMAGE_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png|tif|jpeg|tiff)$");
 
     // Connection to Mongo
     private static MongoStore mongoStore = new MongoStore();
     private static CrawlerGraph g;
     
     public void onStart() {
+    	// Create graph if one doesn't exist in DB, otherwise load existing graph
     	if (mongoStore.getGraph() == null) {
         	g = new CrawlerGraph("firstGraph");
         } else {
@@ -28,26 +29,13 @@ public class FirstCrawler extends WebCrawler {
         }
     }
     
-    /**
-     * You should implement this function to specify whether the given url
-     * should be crawled or not (based on your crawling logic).
-     */
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
+    	// Assignment requirement 11.1: "prevent off site page visits"
         String href = url.getURL().toLowerCase();
-        // Ignore the url if it has an extension that matches our defined set of image extensions.
-        if (IMAGE_EXTENSIONS.matcher(href).matches()) {
-            return false;
-        }
-
-        // Only accept the url if it is in the "www.ics.uci.edu" domain and protocol is "http".
-        return href.startsWith("https://www.ics.uci.edu/");
+        return href.startsWith("https://sikaman.dyndns.org:8443/");
     }
 
-    /**
-     * This function is called when a page is fetched and ready to be processed
-     * by your program.
-     */
     @Override
     public void visit(Page page) {
         int docid = page.getWebURL().getDocid();
@@ -67,7 +55,6 @@ public class FirstCrawler extends WebCrawler {
         logger.debug("Anchor text: {}", anchor);
 
         if (page.getParseData() instanceof HtmlParseData) {
-//        	mongoStore.add(page);
         	CrawlerVertex thisV = new CrawlerVertex(page);
         	g.addVertex(thisV);
         	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
@@ -102,31 +89,12 @@ public class FirstCrawler extends WebCrawler {
             
             // Add to MongoStore
             mongoStore.add(page, pageText, linkText, imagesText);
-            
-//            String text = htmlParseData.getText();
-//            String html = htmlParseData.getHtml();
-//            Set<WebURL> links = htmlParseData.getOutgoingUrls();
-//
-//            logger.debug("Text length: {}", text.length());
-//            logger.debug("Html length: {}", html.length());
-//            logger.debug("Number of outgoing links: {}", links.size());
         }
-
-//        Header[] responseHeaders = page.getFetchResponseHeaders();
-//        if (responseHeaders != null) {
-//            logger.debug("Response headers:");
-//            for (Header header : responseHeaders) {
-//                logger.debug("\t{}: {}", header.getName(), header.getValue());
-//            }
-//        }
-//
-//        logger.debug("=============");
     }
     
     public void onBeforeExit() {
-        // Save the graph to Mongo
+    	// Save the serialized graph to Mongo
     	mongoStore.add(g);
-    	System.out.print(g);
-    	System.out.print(g.getV());
     }
+    
 }
