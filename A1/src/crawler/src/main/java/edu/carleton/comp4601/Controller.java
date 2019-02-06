@@ -14,24 +14,18 @@ public class Controller {
 	private static final Logger logger = LoggerFactory.getLogger(Controller.class);
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 2) {
-            logger.info("Needed parameters: ");
-            logger.info("\t rootFolder (it will contain intermediate crawl data)");
-            logger.info("\t numberOfCralwers (number of concurrent threads)");
-            return;
-        }
 
     /*
      * crawlStorageFolder is a folder where intermediate crawl data is
      * stored.
      */
-        String crawlStorageFolder = args[0];
+        String crawlStorageFolder = "/data/crawl/root/";
 
     /*
      * numberOfCrawlers shows the number of concurrent threads that should
      * be initiated for crawling.
      */
-        int numberOfCrawlers = Integer.parseInt(args[1]);
+        int numberOfCrawlers = 3;
 
         CrawlConfig config = new CrawlConfig();
 
