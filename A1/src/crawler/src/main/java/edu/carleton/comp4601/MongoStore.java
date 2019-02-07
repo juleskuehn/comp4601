@@ -1,6 +1,8 @@
 package edu.carleton.comp4601;
 
 import java.io.IOException;
+import java.util.Date;
+
 import com.mongodb.*;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
@@ -26,25 +28,18 @@ public class MongoStore {
 		graphColl = db.getCollection("graph");
 	}
 	
-	// For use with JSoup
-	public void add(Page page, String pageText, String linkText, String imagesText) {
+	public void add(Page page, String pageText, String linkText, String imagesText, Date crawlTime) {
 		Document doc = new Document("ID", page.getWebURL().getDocid())
 				.append("URL", page.getWebURL().toString())
 				.append("Text", pageText)
 				.append("LINKS", linkText)
-				.append("IMAGES", imagesText);
+				.append("IMAGES", imagesText)
+				.append("CRAWLTIME", crawlTime);
 		docColl.insertOne(doc);
 	}
 	
-	// Used before JSoup introduced
-	@Deprecated
-	public void add(Page page) {
-        HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
-		Document doc = new Document("ID", page.getWebURL().getDocid())
-				.append("URL", page.getWebURL().toString())
-				.append("TEXT", htmlParseData.getText())
-				.append("TAGS", htmlParseData.getMetaTagValue("description"));
-		docColl.insertOne(doc);
+	public Document getDocument(int id) {
+		return docColl.find(Filters.eq("_id", id)).first();
 	}
 	
 	public void add(CrawlerGraph g) {

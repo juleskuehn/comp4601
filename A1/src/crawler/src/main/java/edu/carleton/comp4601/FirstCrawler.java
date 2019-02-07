@@ -1,5 +1,7 @@
 package edu.carleton.comp4601;
 
+import java.io.IOException;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import edu.uci.ics.crawler4j.crawler.Page;
@@ -38,6 +40,28 @@ public class FirstCrawler extends WebCrawler {
 
     @Override
     public void visit(Page page) {
+    	// Adaptive delay. Note that this incurs an additional HTTP request and
+    	// doesn't account for different hosts having different response times
+    	int minDelay = 200;
+    	long start = System.currentTimeMillis();
+    	try {
+			Jsoup.connect(page.getWebURL().getURL()).get();
+		} catch (IOException e) {
+		}
+    	long end = System.currentTimeMillis();
+    	int responseTime = (int) (end - start);
+    	myController.getConfig().setPolitenessDelay(Math.max(responseTime * 10, minDelay));
+    	System.out.println("\n\n\nAdaptive response time: " + responseTime * 10);
+    	
+    	// Add to graph
+    	CrawlerVertex thisV = new CrawlerVertex(page);
+    	g.addVertex(thisV);
+    	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
+    	if (parentV != null) {
+    		g.addEdge(thisV, parentV);      		
+    	}
+    	
+    	// Get page properties via crawler4j methods
         int docid = page.getWebURL().getDocid();
         String url = page.getWebURL().getURL();
         String domain = page.getWebURL().getDomain();
@@ -54,14 +78,8 @@ public class FirstCrawler extends WebCrawler {
         logger.debug("Parent page: {}", parentUrl);
         logger.debug("Anchor text: {}", anchor);
 
+        // Only HTML documents added to DB for now
         if (page.getParseData() instanceof HtmlParseData) {
-        	CrawlerVertex thisV = new CrawlerVertex(page);
-        	g.addVertex(thisV);
-        	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
-        	if (parentV != null) {
-        		g.addEdge(thisV, parentV);      		
-        	}
-        	
         	// JSoup Document used here
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
             String baseURL = "http://" + page.getWebURL().getSubDomain() + page.getWebURL().getDomain();
@@ -88,7 +106,7 @@ public class FirstCrawler extends WebCrawler {
             }
             
             // Add to MongoStore
-            mongoStore.add(page, pageText, linkText, imagesText);
+            mongoStore.add(page, pageText, linkText, imagesText, new Date());
         }
     }
     

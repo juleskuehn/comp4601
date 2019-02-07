@@ -10,8 +10,6 @@ public class Controller {
 	
     public static void main(String[] args) throws Exception {
 
-    	// These used to be command line arguments
-    	// Edit these two lines as desired
         String crawlStorageFolder = "/data/crawl/root/";
         int numberOfCrawlers = 3;
 
