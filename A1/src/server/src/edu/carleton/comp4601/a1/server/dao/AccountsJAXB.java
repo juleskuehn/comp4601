@@ -1,9 +1,11 @@
-package edu.carleton.comp4601.bank.dao;
+package edu.carleton.comp4601.a1.server.dao;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
+import edu.carleton.comp4601.a1.server.model.Account;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,8 +15,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-
-import edu.carleton.comp4601.bank.model.Account;
 
 @XmlRootElement
 public class AccountsJAXB implements AccountStore {

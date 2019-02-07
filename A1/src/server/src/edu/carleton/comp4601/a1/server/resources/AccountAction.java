@@ -1,4 +1,4 @@
-package edu.carleton.comp4601.bank.resources;
+package edu.carleton.comp4601.a1.server.resources;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -13,8 +13,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 
-import edu.carleton.comp4601.bank.dao.AccountStore;
-import edu.carleton.comp4601.bank.model.Account;
+import edu.carleton.comp4601.a1.server.dao.AccountStore;
+import edu.carleton.comp4601.a1.server.model.Account;
 
 public class AccountAction {
 	@Context
