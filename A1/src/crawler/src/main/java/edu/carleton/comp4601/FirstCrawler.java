@@ -1,11 +1,16 @@
 package edu.carleton.comp4601;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Date;
-import java.util.regex.Pattern;
 
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -16,11 +21,13 @@ import edu.uci.ics.crawler4j.url.WebURL;
 
 public class FirstCrawler extends WebCrawler {
 
-    private static final Pattern IMAGE_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png|tif|jpeg|tiff)$");
+	// TODO: Update to allow only the formats specified in Assignment
+//    private static final Pattern ALLOW_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png|tif|jpeg|tiff)$");
 
     // Connection to Mongo
     private static MongoStore mongoStore = new MongoStore();
     private static CrawlerGraph g;
+    int lastID;
     
     public void onStart() {
     	// Create graph if one doesn't exist in DB, otherwise load existing graph
@@ -33,9 +40,11 @@ public class FirstCrawler extends WebCrawler {
     
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
+    	// For testing my own page, which only has internal links
+    	return true;
     	// Assignment requirement 11.1: "prevent off site page visits"
-        String href = url.getURL().toLowerCase();
-        return href.startsWith("https://sikaman.dyndns.org:8443/");
+//        String href = url.getURL().toLowerCase();
+//        return href.startsWith("https://sikaman.dyndns.org:8443/");
     }
 
     @Override
@@ -62,23 +71,8 @@ public class FirstCrawler extends WebCrawler {
     	}
     	
     	// Get page properties via crawler4j methods
-        int docid = page.getWebURL().getDocid();
         String url = page.getWebURL().getURL();
-        String domain = page.getWebURL().getDomain();
-        String path = page.getWebURL().getPath();
-        String subDomain = page.getWebURL().getSubDomain();
-        String parentUrl = page.getWebURL().getParentUrl();
-        String anchor = page.getWebURL().getAnchor();
 
-        logger.debug("Docid: {}", docid);
-        logger.info("URL: {}", url);
-        logger.debug("Domain: '{}'", domain);
-        logger.debug("Sub-domain: '{}'", subDomain);
-        logger.debug("Path: '{}'", path);
-        logger.debug("Parent page: {}", parentUrl);
-        logger.debug("Anchor text: {}", anchor);
-
-        // Only HTML documents added to DB for now
         if (page.getParseData() instanceof HtmlParseData) {
         	// JSoup Document used here
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
@@ -88,6 +82,7 @@ public class FirstCrawler extends WebCrawler {
             
             // Get page text
             String pageText = doc.title() + doc.text() + doc.getElementsByTag("meta").attr("description");
+            System.out.println("Page text:"+pageText);
             
             // Get link hrefs and text
             Elements links = doc.select("a[href]");
@@ -103,10 +98,35 @@ public class FirstCrawler extends WebCrawler {
             String imagesText = "";
             for (Element image : images) {
             	imagesText += image.attr("src") + " " + image.attr("alt") + " ";
+            	System.out.println("Image in HTML:"+imagesText);
             }
             
             // Add to MongoStore
             mongoStore.add(page, pageText, linkText, imagesText, new Date());
+        } else {
+        	// Retrieved URL is not HTML
+        	// Parse with Tika
+    	    try (InputStream stream = new URL(url).openStream()) {
+    	    	// Tika setup
+    	        AutoDetectParser parser = new AutoDetectParser();
+    	    	BodyContentHandler handler = new BodyContentHandler();
+    	    	Metadata metadata = new Metadata();
+    	    	ParseContext context = new ParseContext();
+    	    	parser.parse(stream, handler, metadata, context);
+    	    	
+    	        String[] metadataNames = metadata.names();
+
+    	        for(String name : metadataNames) {		        
+    	           System.out.println(name + ": " + metadata.get(name));
+    	        }
+    	        System.out.println("!!!!!!"+handler.toString());
+    	        
+    	        mongoStore.addNonHTML(page, handler.toString(), metadata.toString(), new Date());
+    	    	
+    	    	stream.close();
+    	    	lastID = page.getWebURL().getDocid();
+    	    } catch (Exception e) { }
+    	    	
         }
     }
     

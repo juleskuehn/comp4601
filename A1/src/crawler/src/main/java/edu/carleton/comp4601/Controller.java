@@ -27,9 +27,9 @@ public class Controller {
         CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
 
         // Multiple seeds can be added. These are the 3 specified in the assignment.
-        controller.addSeed("https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/handouts/");
+//        controller.addSeed("https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/handouts/");
 //        controller.addSeed("https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/resources/N-0.html");
-//        controller.addSeed("URL of your choosing");
+        controller.addSeed("http://lol.jules.lol/parsertest/");
 
         controller.start(FirstCrawler.class, numberOfCrawlers);
     }

@@ -8,7 +8,6 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import edu.uci.ics.crawler4j.crawler.Page;
-import edu.uci.ics.crawler4j.parser.HtmlParseData;
 
 import org.bson.*;
 import org.bson.types.Binary;
@@ -28,18 +27,31 @@ public class MongoStore {
 		graphColl = db.getCollection("graph");
 	}
 	
+	// TODO update to store required information specified in Assignment
 	public void add(Page page, String pageText, String linkText, String imagesText, Date crawlTime) {
 		Document doc = new Document("ID", page.getWebURL().getDocid())
 				.append("URL", page.getWebURL().toString())
-				.append("Text", pageText)
+				.append("TEXT", pageText)
 				.append("LINKS", linkText)
 				.append("IMAGES", imagesText)
 				.append("CRAWLTIME", crawlTime);
 		docColl.insertOne(doc);
 	}
 	
+	// TODO update to store required information specified in Assignment
+	public void addNonHTML(Page page, String text, String metadata, Date crawlTime) {
+		Document doc = new Document("ID", page.getWebURL().getDocid())
+				.append("URL", page.getWebURL().toString())
+				.append("TEXT", text)
+				.append("METADATA", metadata)
+				.append("CRAWLTIME", crawlTime);
+		docColl.insertOne(doc);
+	}
+	
 	public Document getDocument(int id) {
-		return docColl.find(Filters.eq("_id", id)).first();
+		// TODO not working when last tested
+		Document document = docColl.find(Filters.eq("_id", id)).first();
+		return document;
 	}
 	
 	public void add(CrawlerGraph g) {
