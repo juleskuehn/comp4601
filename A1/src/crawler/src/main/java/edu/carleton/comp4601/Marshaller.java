@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+// This class was provided for in-class use
 public class Marshaller {
 
 	// return a byte array representing the serialized version of an object

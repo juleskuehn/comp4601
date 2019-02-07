@@ -12,41 +12,16 @@ public class CrawlerGraph implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	private String name;
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Multigraph<CrawlerVertex, DefaultEdge> getG() {
-		return g;
-	}
-
-	public void setG(Multigraph<CrawlerVertex, DefaultEdge> g) {
-		this.g = g;
-	}
-
-	public ConcurrentHashMap<Long, CrawlerVertex> getV() {
-		return v;
-	}
-
-	public void setV(ConcurrentHashMap<Long, CrawlerVertex> v) {
-		this.v = v;
-	}
-
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-
 	private Multigraph<CrawlerVertex, DefaultEdge> g;
-	private ConcurrentHashMap<Long, CrawlerVertex> v;
+	private ConcurrentHashMap<Long, CrawlerVertex> vertices;
+	
+	// Keep track of first vertex added as seed for DFS
+	// Note that this only works when there is a single seed
 	private CrawlerVertex firstV = null;
 
 	public CrawlerGraph(String name) {
 		this.name = name;
-		this.v = new ConcurrentHashMap<Long, CrawlerVertex>();
+		this.vertices = new ConcurrentHashMap<Long, CrawlerVertex>();
 		this.g = new Multigraph<CrawlerVertex, DefaultEdge>(DefaultEdge.class);
 	}
 	
@@ -54,12 +29,12 @@ public class CrawlerGraph implements Serializable {
 		if (firstV == null) {
 			firstV = v;
 		}
-		this.v.put(v.getID(), v);
+		this.vertices.put(v.getID(), v);
 		return g.addVertex(v);
 	}
 	
 	public synchronized boolean removeVertex(CrawlerVertex v) {
-		this.v.remove(v.getID());
+		this.vertices.remove(v.getID());
 		return g.removeVertex(v);
 	}
 	
@@ -82,4 +57,35 @@ public class CrawlerGraph implements Serializable {
         }
         return s;
     }
+	
+	// Simple getters and setters
+	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Multigraph<CrawlerVertex, DefaultEdge> getG() {
+		return g;
+	}
+
+	public void setG(Multigraph<CrawlerVertex, DefaultEdge> g) {
+		this.g = g;
+	}
+
+	public ConcurrentHashMap<Long, CrawlerVertex> getV() {
+		return vertices;
+	}
+
+	public void setV(ConcurrentHashMap<Long, CrawlerVertex> v) {
+		this.vertices = v;
+	}
+
+	public static long getSerialVersionUID() {
+		return serialVersionUID;
+	}
+	
 }

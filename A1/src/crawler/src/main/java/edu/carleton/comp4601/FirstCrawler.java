@@ -1,9 +1,16 @@
 package edu.carleton.comp4601;
 
-import java.util.regex.Pattern;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Date;
 
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,13 +21,16 @@ import edu.uci.ics.crawler4j.url.WebURL;
 
 public class FirstCrawler extends WebCrawler {
 
-    private static final Pattern IMAGE_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png)$");
+	// TODO: Update to allow only the formats specified in Assignment
+//    private static final Pattern ALLOW_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png|tif|jpeg|tiff)$");
 
     // Connection to Mongo
     private static MongoStore mongoStore = new MongoStore();
     private static CrawlerGraph g;
+    int lastID;
     
     public void onStart() {
+    	// Create graph if one doesn't exist in DB, otherwise load existing graph
     	if (mongoStore.getGraph() == null) {
         	g = new CrawlerGraph("firstGraph");
         } else {
@@ -28,53 +38,42 @@ public class FirstCrawler extends WebCrawler {
         }
     }
     
-    /**
-     * You should implement this function to specify whether the given url
-     * should be crawled or not (based on your crawling logic).
-     */
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
-        String href = url.getURL().toLowerCase();
-        // Ignore the url if it has an extension that matches our defined set of image extensions.
-        if (IMAGE_EXTENSIONS.matcher(href).matches()) {
-            return false;
-        }
-
-        // Only accept the url if it is in the "www.ics.uci.edu" domain and protocol is "http".
-        return href.startsWith("https://www.ics.uci.edu/");
+    	// For testing my own page, which only has internal links
+    	return true;
+    	// Assignment requirement 11.1: "prevent off site page visits"
+//        String href = url.getURL().toLowerCase();
+//        return href.startsWith("https://sikaman.dyndns.org:8443/");
     }
 
-    /**
-     * This function is called when a page is fetched and ready to be processed
-     * by your program.
-     */
     @Override
     public void visit(Page page) {
-        int docid = page.getWebURL().getDocid();
+    	// Adaptive delay. Note that this incurs an additional HTTP request and
+    	// doesn't account for different hosts having different response times
+    	int minDelay = 200;
+    	long start = System.currentTimeMillis();
+    	try {
+			Jsoup.connect(page.getWebURL().getURL()).get();
+		} catch (IOException e) {
+		}
+    	long end = System.currentTimeMillis();
+    	int responseTime = (int) (end - start);
+    	myController.getConfig().setPolitenessDelay(Math.max(responseTime * 10, minDelay));
+    	System.out.println("\n\n\nAdaptive response time: " + responseTime * 10);
+    	
+    	// Add to graph
+    	CrawlerVertex thisV = new CrawlerVertex(page);
+    	g.addVertex(thisV);
+    	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
+    	if (parentV != null) {
+    		g.addEdge(thisV, parentV);      		
+    	}
+    	
+    	// Get page properties via crawler4j methods
         String url = page.getWebURL().getURL();
-        String domain = page.getWebURL().getDomain();
-        String path = page.getWebURL().getPath();
-        String subDomain = page.getWebURL().getSubDomain();
-        String parentUrl = page.getWebURL().getParentUrl();
-        String anchor = page.getWebURL().getAnchor();
-
-        logger.debug("Docid: {}", docid);
-        logger.info("URL: {}", url);
-        logger.debug("Domain: '{}'", domain);
-        logger.debug("Sub-domain: '{}'", subDomain);
-        logger.debug("Path: '{}'", path);
-        logger.debug("Parent page: {}", parentUrl);
-        logger.debug("Anchor text: {}", anchor);
 
         if (page.getParseData() instanceof HtmlParseData) {
-//        	mongoStore.add(page);
-        	CrawlerVertex thisV = new CrawlerVertex(page);
-        	g.addVertex(thisV);
-        	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
-        	if (parentV != null) {
-        		g.addEdge(thisV, parentV);      		
-        	}
-        	
         	// JSoup Document used here
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
             String baseURL = "http://" + page.getWebURL().getSubDomain() + page.getWebURL().getDomain();
@@ -83,6 +82,7 @@ public class FirstCrawler extends WebCrawler {
             
             // Get page text
             String pageText = doc.title() + doc.text() + doc.getElementsByTag("meta").attr("description");
+            System.out.println("Page text:"+pageText);
             
             // Get link hrefs and text
             Elements links = doc.select("a[href]");
@@ -98,35 +98,41 @@ public class FirstCrawler extends WebCrawler {
             String imagesText = "";
             for (Element image : images) {
             	imagesText += image.attr("src") + " " + image.attr("alt") + " ";
+            	System.out.println("Image in HTML:"+imagesText);
             }
             
             // Add to MongoStore
-            mongoStore.add(page, pageText, linkText, imagesText);
-            
-//            String text = htmlParseData.getText();
-//            String html = htmlParseData.getHtml();
-//            Set<WebURL> links = htmlParseData.getOutgoingUrls();
-//
-//            logger.debug("Text length: {}", text.length());
-//            logger.debug("Html length: {}", html.length());
-//            logger.debug("Number of outgoing links: {}", links.size());
-        }
+            mongoStore.add(page, pageText, linkText, imagesText, new Date());
+        } else {
+        	// Retrieved URL is not HTML
+        	// Parse with Tika
+    	    try (InputStream stream = new URL(url).openStream()) {
+    	    	// Tika setup
+    	        AutoDetectParser parser = new AutoDetectParser();
+    	    	BodyContentHandler handler = new BodyContentHandler();
+    	    	Metadata metadata = new Metadata();
+    	    	ParseContext context = new ParseContext();
+    	    	parser.parse(stream, handler, metadata, context);
+    	    	
+    	        String[] metadataNames = metadata.names();
 
-//        Header[] responseHeaders = page.getFetchResponseHeaders();
-//        if (responseHeaders != null) {
-//            logger.debug("Response headers:");
-//            for (Header header : responseHeaders) {
-//                logger.debug("\t{}: {}", header.getName(), header.getValue());
-//            }
-//        }
-//
-//        logger.debug("=============");
+    	        for(String name : metadataNames) {		        
+    	           System.out.println(name + ": " + metadata.get(name));
+    	        }
+    	        System.out.println("!!!!!!"+handler.toString());
+    	        
+    	        mongoStore.addNonHTML(page, handler.toString(), metadata.toString(), new Date());
+    	    	
+    	    	stream.close();
+    	    	lastID = page.getWebURL().getDocid();
+    	    } catch (Exception e) { }
+    	    	
+        }
     }
     
     public void onBeforeExit() {
-        // Save the graph to Mongo
+    	// Save the serialized graph to Mongo
     	mongoStore.add(g);
-    	System.out.print(g);
-    	System.out.print(g.getV());
     }
+    
 }
