@@ -17,7 +17,7 @@ public class Controller {
         config.setCrawlStorageFolder(crawlStorageFolder);
         config.setPolitenessDelay(1000); // Changes adaptively in FirstCrawler::visit()
         config.setMaxDepthOfCrawling(-1); // Default -1 is unlimited depth
-        config.setMaxPagesToFetch(6); // Default -1 for unlimited pages
+        config.setMaxPagesToFetch(10); // Default -1 for unlimited pages
         config.setIncludeBinaryContentInCrawling(true);
         config.setResumableCrawling(false);
 

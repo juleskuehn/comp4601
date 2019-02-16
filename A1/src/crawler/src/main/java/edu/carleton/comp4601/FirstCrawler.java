@@ -30,12 +30,13 @@ public class FirstCrawler extends WebCrawler {
     int lastID;
     
     public void onStart() {
+    	g = new CrawlerGraph("firstGraph");
     	// Create graph if one doesn't exist in DB, otherwise load existing graph
-    	if (mongoStore.getGraph() == null) {
-        	g = new CrawlerGraph("firstGraph");
-        } else {
-        	g = mongoStore.getGraph();
-        }
+//    	if (mongoStore.getGraph() == null) {
+//        	g = new CrawlerGraph("firstGraph");
+//        } else {
+//        	g = mongoStore.getGraph();
+//        }
     }
     
     @Override
@@ -44,7 +45,7 @@ public class FirstCrawler extends WebCrawler {
     	return true;
     	// Assignment requirement 11.1: "prevent off site page visits"
 //        String href = url.getURL().toLowerCase();
-//        return href.startsWith("https://sikaman.dyndns.org:8443/");
+//        return href.startsWith("https://sikaman.dyndns.org");
     }
 
     @Override
@@ -131,6 +132,9 @@ public class FirstCrawler extends WebCrawler {
     }
     
     public void onBeforeExit() {
+    	System.out.println(g);
+//    	 Compute page rank (test)
+    	PageRank.computePageRank(g.toAdjMatrix());
     	// Save the serialized graph to Mongo
     	mongoStore.add(g);
     }
