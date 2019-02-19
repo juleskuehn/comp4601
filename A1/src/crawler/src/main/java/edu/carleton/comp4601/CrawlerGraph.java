@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.Multigraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.traverse.DepthFirstIterator;
 
 import Jama.Matrix;
@@ -16,7 +17,7 @@ public class CrawlerGraph implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	private String name;
-	private Multigraph<CrawlerVertex, DefaultEdge> g;
+	private DefaultDirectedGraph<CrawlerVertex, DefaultEdge> g;
 	private ConcurrentHashMap<Long, CrawlerVertex> vertices;
 	// When creating an adjacency matrix, need to map indices of rows/cols (same)
 	// to the vertex ID
@@ -27,24 +28,20 @@ public class CrawlerGraph implements Serializable {
 	// Note that this only works when there is a single seed
 	private CrawlerVertex firstV = null;
 	
+	// Create adjacency matrix from directed graph
 	public Matrix toAdjMatrix() {
 		double[][] array = new double[vertices.size()][vertices.size()];
 		System.out.printf("There are %d vertices.", vertices.size());
 		int i = 0;
 		// Map vertex ID to index in adjacency matrix 
-		
 		Iterator<ConcurrentHashMap.Entry<Long, CrawlerVertex>> it = vertices.entrySet().iterator();
 		Iterator<CrawlerVertex> iterator = new DepthFirstIterator<>(g, firstV);
         while (iterator.hasNext()) {
         	i++;
             CrawlerVertex v = iterator.next();
-//          vIDtoAdjIdx.put(v.getID(), i);
-//	        adjIdxToVID.put(i, v.getID());
         }
 	    // Fill in 1's in adjacency matrix where edge exists
     	for (DefaultEdge e : g.edgeSet()) {
-//    	    int targetAdjIdx = vIDtoAdjIdx.get(g.getEdgeTarget(e).getID());
-//    	    int sourceAdjIdx = vIDtoAdjIdx.get(g.getEdgeSource(e).getID());
     		int sourceIdx = (int) (g.getEdgeSource(e).getID() - 1);
     		int targetIdx = (int) (g.getEdgeTarget(e).getID() - 1);
     	    array[targetIdx][sourceIdx] = 1;
@@ -55,7 +52,7 @@ public class CrawlerGraph implements Serializable {
 	public CrawlerGraph(String name) {
 		this.name = name;
 		this.vertices = new ConcurrentHashMap<Long, CrawlerVertex>();
-		this.g = new Multigraph<CrawlerVertex, DefaultEdge>(DefaultEdge.class);
+		this.g = new DefaultDirectedGraph<CrawlerVertex, DefaultEdge>(DefaultEdge.class);
 	}
 	
 	public synchronized boolean addVertex(CrawlerVertex v) {
@@ -82,11 +79,15 @@ public class CrawlerGraph implements Serializable {
 	@Override
 	public String toString()
     {
-		String s = "CrawlerGraph:\n";
+		String s = "\nCrawlerGraph:\n";
         Iterator<CrawlerVertex> iterator = new DepthFirstIterator<>(g, firstV);
         while (iterator.hasNext()) {
             CrawlerVertex v = iterator.next();
             s += "ID " + v.getID() + " " + v.toString() + "\n";
+        }
+        s += "Edges:\n";
+        for(DefaultEdge e : g.edgeSet()){
+            s += g.getEdgeSource(e) + "\n" + g.getEdgeTarget(e) + "\n\n";
         }
         return s;
     }
@@ -101,11 +102,11 @@ public class CrawlerGraph implements Serializable {
 		this.name = name;
 	}
 
-	public Multigraph<CrawlerVertex, DefaultEdge> getG() {
+	public DefaultDirectedGraph<CrawlerVertex, DefaultEdge> getG() {
 		return g;
 	}
 
-	public void setG(Multigraph<CrawlerVertex, DefaultEdge> g) {
+	public void setG(DefaultDirectedGraph<CrawlerVertex, DefaultEdge> g) {
 		this.g = g;
 	}
 

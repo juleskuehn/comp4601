@@ -29,29 +29,36 @@ public class MongoStore {
 	
 	// TODO update to store required information specified in Assignment
 	public void add(Page page, String pageText, String linkText, String imagesText, Date crawlTime) {
-		Document doc = new Document("ID", page.getWebURL().getDocid())
+		Document doc = new Document("_id", page.getWebURL().getDocid())
 				.append("URL", page.getWebURL().toString())
 				.append("TEXT", pageText)
 				.append("LINKS", linkText)
 				.append("IMAGES", imagesText)
 				.append("CRAWLTIME", crawlTime);
-		docColl.insertOne(doc);
+		docColl.replaceOne(Filters.eq("_id", page.getWebURL().getDocid()), doc, new UpdateOptions().upsert(true));
 	}
 	
 	// TODO update to store required information specified in Assignment
 	public void addNonHTML(Page page, String text, String metadata, Date crawlTime) {
-		Document doc = new Document("ID", page.getWebURL().getDocid())
+		Document doc = new Document("_id", page.getWebURL().getDocid())
 				.append("URL", page.getWebURL().toString())
 				.append("TEXT", text)
 				.append("METADATA", metadata)
 				.append("CRAWLTIME", crawlTime);
-		docColl.insertOne(doc);
+		docColl.replaceOne(Filters.eq("_id", page.getWebURL().getDocid()), doc, new UpdateOptions().upsert(true));
 	}
 	
 	public Document getDocument(int id) {
 		// TODO not working when last tested
 		Document document = docColl.find(Filters.eq("_id", id)).first();
 		return document;
+	}
+	
+	public int getIdByURL(String url) {
+		// TODO not working when last tested
+		System.out.println(url);
+		Document document = docColl.find(Filters.eq("URL", url)).first();
+		return Integer.parseInt(document.get("_id").toString());
 	}
 	
 	public void add(CrawlerGraph g) {

@@ -68,7 +68,7 @@ public class FirstCrawler extends WebCrawler {
     	g.addVertex(thisV);
     	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
     	if (parentV != null) {
-    		g.addEdge(thisV, parentV);      		
+    		g.addEdge(parentV, thisV);      		
     	}
     	
     	// Get page properties via crawler4j methods
@@ -77,20 +77,22 @@ public class FirstCrawler extends WebCrawler {
         if (page.getParseData() instanceof HtmlParseData) {
         	// JSoup Document used here
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
-            String baseURL = "http://" + page.getWebURL().getSubDomain() + page.getWebURL().getDomain();
+            String baseURL = url.substring(0, url.lastIndexOf("/")) + "/";
+            System.out.println(url);
             Document doc = Jsoup.parse(pageHtml, baseURL);	
-            System.out.println("Jsoup says page title is: " + doc.title());
+            System.out.println(doc.title());
             
             // Get page text
             String pageText = doc.title() + doc.text() + doc.getElementsByTag("meta").attr("description");
-            System.out.println("Page text:"+pageText);
+//            System.out.println("Page text:"+pageText);
             
             // Get link hrefs and text
             Elements links = doc.select("a[href]");
             String linkText = "";
             for (Element link : links) {
-            	System.out.println(link.text() + ": " + link.attr("href"));
+//            	System.out.println(link.text() + ": " + link.attr("href"));
             	linkText += link.attr("href") + " " + link.text() + " ";
+            	// Add links to visited pages to graph
             }
             
             // Get images
@@ -99,11 +101,31 @@ public class FirstCrawler extends WebCrawler {
             String imagesText = "";
             for (Element image : images) {
             	imagesText += image.attr("src") + " " + image.attr("alt") + " ";
-            	System.out.println("Image in HTML:"+imagesText);
+//            	System.out.println("Image in HTML:"+imagesText);
             }
             
             // Add to MongoStore
             mongoStore.add(page, pageText, linkText, imagesText, new Date());
+        
+            // Have to add links after, in case link to self
+            for (Element link : links) {
+            	// Add links to visited pages to graph
+            	try {
+            		int linkDocId = mongoStore.getIdByURL(link.attr("abs:href"));
+            		if (linkDocId == page.getWebURL().getDocid()) {
+//            			System.out.println("Self link at url " + page.getWebURL().toString());
+            			g.addEdge(thisV, thisV);
+            		} else {
+//            		System.out.printf("%d linkDocId Found!!", linkDocId);
+            			// Add to graph
+            			CrawlerVertex linkedV = g.getV().get((long) linkDocId);
+            			g.addEdge(thisV, linkedV);            			
+            		}
+            	} catch (Exception e) {
+//            		System.out.printf("%s not found :(", link.attr("abs:href"));
+            	}
+            }
+            
         } else {
         	// Retrieved URL is not HTML
         	// Parse with Tika
@@ -132,7 +154,7 @@ public class FirstCrawler extends WebCrawler {
     }
     
     public void onBeforeExit() {
-    	System.out.println(g);
+//    	System.out.println(g);
 //    	 Compute page rank (test)
     	PageRank.computePageRank(g.toAdjMatrix());
     	// Save the serialized graph to Mongo

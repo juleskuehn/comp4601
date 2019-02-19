@@ -17,7 +17,7 @@ public class Controller {
         config.setCrawlStorageFolder(crawlStorageFolder);
         config.setPolitenessDelay(1000); // Changes adaptively in FirstCrawler::visit()
         config.setMaxDepthOfCrawling(-1); // Default -1 is unlimited depth
-        config.setMaxPagesToFetch(10); // Default -1 for unlimited pages
+        config.setMaxPagesToFetch(1005); // Default -1 for unlimited pages
         config.setIncludeBinaryContentInCrawling(true);
         config.setResumableCrawling(false);
 
@@ -26,11 +26,14 @@ public class Controller {
         RobotstxtServer robotstxtServer = new RobotstxtServer(robotstxtConfig, pageFetcher);
         CrawlController controller = new CrawlController(config, pageFetcher, robotstxtServer);
 
-        // Multiple seeds can be added. These are the 3 specified in the assignment.
+        // Multiple seeds can be added. These are the 2 specified in the assignment.
 //        controller.addSeed("https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/handouts/");
-//        controller.addSeed("https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/resources/N-0.html");
-        controller.addSeed("http://lol.jules.lol/parsertest/");
-
+        controller.addSeed("https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/resources/N-0.html");
+        
+        // Page rank example 2: d0, d1, d2, d3, d4, d5, d6
+//        controller.addSeed("http://lol.jules.lol/parsertest/d1.html");
+//        controller.addSeed("http://lol.jules.lol/parsertest/d5.html");
+        
         controller.start(FirstCrawler.class, numberOfCrawlers);
     }
     
