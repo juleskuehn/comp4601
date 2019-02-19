@@ -26,7 +26,9 @@ public class CrawlerVertex implements Serializable {
 	}
 
 	@Override
-	public String toString() { return URL; }
+	public String toString() {
+		return URL.substring(URL.lastIndexOf("/"));
+	}
 
 	public long getID() { return ID; }
 

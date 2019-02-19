@@ -32,11 +32,11 @@ public class FirstCrawler extends WebCrawler {
     public void onStart() {
     	g = new CrawlerGraph("firstGraph");
     	// Create graph if one doesn't exist in DB, otherwise load existing graph
-//    	if (mongoStore.getGraph() == null) {
-//        	g = new CrawlerGraph("firstGraph");
-//        } else {
-//        	g = mongoStore.getGraph();
-//        }
+    	if (mongoStore.getGraph() == null) {
+        	g = new CrawlerGraph("firstGraph");
+        } else {
+        	g = mongoStore.getGraph();
+        }
     }
     
     @Override
@@ -63,22 +63,28 @@ public class FirstCrawler extends WebCrawler {
     	myController.getConfig().setPolitenessDelay(Math.max(responseTime * 10, minDelay));
     	System.out.println("\n\n\nAdaptive response time: " + responseTime * 10);
     	
+    	long thisID = (long) page.getWebURL().getDocid();
+    	long parentID = (long) page.getWebURL().getParentDocid();
+    	
     	// Add to graph
-    	CrawlerVertex thisV = new CrawlerVertex(page);
-    	g.addVertex(thisV);
-    	CrawlerVertex parentV = g.getV().get((long) page.getWebURL().getParentDocid());
+    	CrawlerVertex thisV = g.getV().get(thisID);
+    	if (thisV == null) {
+    		thisV = new CrawlerVertex(page);    		
+    		g.addVertex(thisV);
+    	}
+    	CrawlerVertex parentV = g.getV().get(parentID);
     	if (parentV != null) {
     		g.addEdge(parentV, thisV);      		
     	}
     	
     	// Get page properties via crawler4j methods
         String url = page.getWebURL().getURL();
+        System.out.println(url);
 
         if (page.getParseData() instanceof HtmlParseData) {
         	// JSoup Document used here
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
             String baseURL = url.substring(0, url.lastIndexOf("/")) + "/";
-            System.out.println(url);
             Document doc = Jsoup.parse(pageHtml, baseURL);	
             System.out.println(doc.title());
             
@@ -140,9 +146,9 @@ public class FirstCrawler extends WebCrawler {
     	        String[] metadataNames = metadata.names();
 
     	        for(String name : metadataNames) {		        
-    	           System.out.println(name + ": " + metadata.get(name));
+//    	           System.out.println(name + ": " + metadata.get(name));
     	        }
-    	        System.out.println("!!!!!!"+handler.toString());
+//    	        System.out.println("!!!!!!"+handler.toString());
     	        
     	        mongoStore.addNonHTML(page, handler.toString(), metadata.toString(), new Date());
     	    	
@@ -153,10 +159,17 @@ public class FirstCrawler extends WebCrawler {
         }
     }
     
-    public void onBeforeExit() {
-//    	System.out.println(g);
-//    	 Compute page rank (test)
-    	PageRank.computePageRank(g.toAdjMatrix());
+    // (Shady) singleton pattern to communicate between threads
+    @SuppressWarnings("static-access")
+	public void onBeforeExit() {
+    	// Is this crawler thread the first to finish?
+    	if (CrawlerSharedConfig.getInstance().firstToFinish) {
+    		// (Prevent printing multiple times)
+    		System.out.println(g);
+    		PageRank.computePageRank(g.toAdjMatrix());
+    		GraphLayoutVisualizer.visualizeGraph(g.getG());
+    		CrawlerSharedConfig.getInstance().firstToFinish = false;
+    	}
     	// Save the serialized graph to Mongo
     	mongoStore.add(g);
     }

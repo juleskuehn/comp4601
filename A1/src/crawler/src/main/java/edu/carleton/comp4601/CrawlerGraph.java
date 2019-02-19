@@ -31,19 +31,19 @@ public class CrawlerGraph implements Serializable {
 	// Create adjacency matrix from directed graph
 	public Matrix toAdjMatrix() {
 		double[][] array = new double[vertices.size()][vertices.size()];
-		System.out.printf("There are %d vertices.", vertices.size());
+		System.out.printf("There are %d vertices.\n", vertices.size());
 		int i = 0;
-		// Map vertex ID to index in adjacency matrix 
-		Iterator<ConcurrentHashMap.Entry<Long, CrawlerVertex>> it = vertices.entrySet().iterator();
-		Iterator<CrawlerVertex> iterator = new DepthFirstIterator<>(g, firstV);
-        while (iterator.hasNext()) {
-        	i++;
-            CrawlerVertex v = iterator.next();
-        }
+		// Create mapping between adjacency array and document indices
+		for (Map.Entry<Long, CrawlerVertex> entry : vertices.entrySet()) {
+			vIDtoAdjIdx.put(entry.getKey(), i);
+			adjIdxToVID.put(i, entry.getKey());
+			i++;
+		}
+		
 	    // Fill in 1's in adjacency matrix where edge exists
     	for (DefaultEdge e : g.edgeSet()) {
-    		int sourceIdx = (int) (g.getEdgeSource(e).getID() - 1);
-    		int targetIdx = (int) (g.getEdgeTarget(e).getID() - 1);
+    		int sourceIdx = (int) (vIDtoAdjIdx.get(g.getEdgeSource(e).getID()));
+    		int targetIdx = (int) (vIDtoAdjIdx.get(g.getEdgeTarget(e).getID()));
     	    array[targetIdx][sourceIdx] = 1;
     	}
 		return new Matrix(array);
@@ -53,14 +53,19 @@ public class CrawlerGraph implements Serializable {
 		this.name = name;
 		this.vertices = new ConcurrentHashMap<Long, CrawlerVertex>();
 		this.g = new DefaultDirectedGraph<CrawlerVertex, DefaultEdge>(DefaultEdge.class);
+		this.vIDtoAdjIdx = new ConcurrentHashMap<Long, Integer>();
+		this.adjIdxToVID = new ConcurrentHashMap<Integer, Long>();	
 	}
 	
 	public synchronized boolean addVertex(CrawlerVertex v) {
 		if (firstV == null) {
 			firstV = v;
 		}
-		this.vertices.put(v.getID(), v);
-		return g.addVertex(v);
+		if (!vertices.containsKey(v.getID())) {			
+			this.vertices.put(v.getID(), v);
+			return g.addVertex(v);
+		}
+		return false;
 	}
 	
 	public synchronized boolean removeVertex(CrawlerVertex v) {
@@ -81,14 +86,13 @@ public class CrawlerGraph implements Serializable {
     {
 		String s = "\nCrawlerGraph:\n";
         Iterator<CrawlerVertex> iterator = new DepthFirstIterator<>(g, firstV);
-        while (iterator.hasNext()) {
-            CrawlerVertex v = iterator.next();
-            s += "ID " + v.getID() + " " + v.toString() + "\n";
-        }
-        s += "Edges:\n";
-        for(DefaultEdge e : g.edgeSet()){
-            s += g.getEdgeSource(e) + "\n" + g.getEdgeTarget(e) + "\n\n";
-        }
+        for (Map.Entry<Long, CrawlerVertex> entry : vertices.entrySet()) {
+			s += entry.getKey() + " " + entry.getValue().getURL() + "\n";
+		}
+//        s += "Edges:\n";
+//        for(DefaultEdge e : g.edgeSet()){
+//            s += g.getEdgeSource(e) + "\n" + g.getEdgeTarget(e) + "\n\n";
+//        }
         return s;
     }
 	
