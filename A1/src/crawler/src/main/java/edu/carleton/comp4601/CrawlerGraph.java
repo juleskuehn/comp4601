@@ -89,10 +89,10 @@ public class CrawlerGraph implements Serializable {
         for (Map.Entry<Long, CrawlerVertex> entry : vertices.entrySet()) {
 			s += entry.getKey() + " " + entry.getValue().getURL() + "\n";
 		}
-//        s += "Edges:\n";
-//        for(DefaultEdge e : g.edgeSet()){
-//            s += g.getEdgeSource(e) + "\n" + g.getEdgeTarget(e) + "\n\n";
-//        }
+        s += "Edges:\n";
+        for(DefaultEdge e : g.edgeSet()){
+            s += g.getEdgeSource(e) + "\n" + g.getEdgeTarget(e) + "\n\n";
+        }
         return s;
     }
 	

@@ -37,10 +37,10 @@ public class PageRank {
 	// Takes an adjacency matrix of directed links
 	// Computes and prints page ranks
 	public static Matrix computePageRank(Matrix A) {
-//		A.print(5, 3);
+		A.print(5, 3);
 		// Work on this probability or "transition" matrix
 		Matrix P = getProbMatrix(A.copy());
-//		P.print(5, 3);
+		P.print(5, 3);
 		// Initial probabilities: [1., 0., 0., ... , 0.]
 		double[] x0 = new double[P.getColumnDimension()];
 		x0[0] = 1.;

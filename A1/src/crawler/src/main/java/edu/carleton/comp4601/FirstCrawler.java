@@ -93,29 +93,31 @@ public class FirstCrawler extends WebCrawler {
             // Get page content for SDA Document
             String name = doc.title();
             String content = doc.text();
+            
             ArrayList<String> tags = new ArrayList<String>();
-            for (Element metaTag : doc.getElementsByTag("meta")) {
-            	tags.add(metaTag.attr("content"));
-            }
+//            for (Element metaTag : doc.getElementsByTag("meta")) {
+//            	tags.add(metaTag.attr("content"));
+//            }
             // Add page title to "tags" to ensure that all documents have at least 1 keyword
-            tags.add(name);
+//            tags.add(name);
+            
             // Get each link's href and text
             Elements linkEls = doc.select("a[href]");
             ArrayList<String> links = new ArrayList<String>();
             for (Element link : linkEls) {
-            	links.add(link.text() + "\n" + link.attr("href"));
+            	links.add(link.attr("abs:href"));
             }
             
             // Add alt text from images to content
             String selector = "img[src~=(?i)\\.(png|jpe?g|gif)]";
             Elements images = doc.select(selector);
             for (Element image : images) {
-            	content += image.attr("alt") + "\n" + image.attr("src") + "\n";
+            	content += " " + image.attr("alt");
             }
             
             // Insert before adding outgoing links
             // Neccessary to insert here because there may be self-links
-            mongoStore.add(thisDocId, name, url, content, tags, links);
+            mongoStore.add(thisDocId, name, url, content, tags, links, page.getContentType());
         
             for (Element link : linkEls) {
             	// Add links to visited pages to graph
@@ -128,7 +130,7 @@ public class FirstCrawler extends WebCrawler {
 //            		System.out.printf("%d linkDocId Found!!", linkDocId);
             			// Add to graph
             			CrawlerVertex linkedV = g.getV().get((long) linkDocId);
-            			g.addEdge(thisV, linkedV);            			
+            			g.addEdge(thisV, linkedV);
             		}
             	} catch (Exception e) {
 //            		System.out.printf("%s not found :(", link.attr("abs:href"));
@@ -151,13 +153,13 @@ public class FirstCrawler extends WebCrawler {
     	        
     	        // Use metadata as tags
     	        ArrayList<String> tags = new ArrayList<String>();
-    	        for(String name : metadata.names()) {		        
-    	           tags.add(metadata.get(name));
-    	        }
+//    	        for(String name : metadata.names()) {		        
+//    	           tags.add(metadata.get(name));
+//    	        }
     	        
 //    	        Not adding outgoing links from non-web documents to the graph
     	        ArrayList<String> links = new ArrayList<String>();
-    	        mongoStore.add(thisDocId, url.substring(url.lastIndexOf("/")), url, content, tags, links);
+    	        mongoStore.add(thisDocId, url.substring(url.lastIndexOf("/")), url, content, tags, links, page.getContentType());
     	    	
     	    	stream.close();
     	    } catch (Exception e) { }

@@ -29,27 +29,26 @@ public class MongoStore {
 	}
 		
 	public void add(int thisDocId, String name, String url, String content,
-			ArrayList<String> tags, ArrayList<String> links) {
+			ArrayList<String> tags, ArrayList<String> links, String type) {
 		Document doc = new Document("_id", thisDocId)
 							.append("name", name)
 							.append("url", url)
 							.append("content", content)
 							.append("tags", tags)
 							.append("links", links)
-							.append("crawltime", new Date());
+							.append("crawltime", new Date())
+							.append("type", type);
 		docColl.replaceOne(Filters.eq("_id", thisDocId), doc, new UpdateOptions().upsert(true));
 	}
 	
 	public Document getDocument(int id) {
-		// TODO not working when last tested
 		Document document = docColl.find(Filters.eq("_id", id)).first();
 		return document;
 	}
 	
 	public int getIdByURL(String url) {
-		// TODO not working when last tested
-		System.out.println(url);
-		Document document = docColl.find(Filters.eq("URL", url)).first();
+//		System.out.println(url);
+		Document document = docColl.find(Filters.eq("url", url)).first();
 		return Integer.parseInt(document.get("_id").toString());
 	}
 	

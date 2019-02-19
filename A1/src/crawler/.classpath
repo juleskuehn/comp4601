@@ -23,9 +23,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/sda-1.1.jar"/>
-	<classpathentry kind="lib" path="lib/javax.websocket-api-1.1.jar"/>
-	<classpathentry kind="lib" path="lib/sda-1.1a.jar"/>
-	<classpathentry kind="lib" path="lib/tyrus-client-1.14.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/javax.websocket-api-1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sda-1.1a.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/tyrus-client-1.14.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
