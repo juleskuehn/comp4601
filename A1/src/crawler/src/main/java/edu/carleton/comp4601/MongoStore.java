@@ -1,6 +1,7 @@
 package edu.carleton.comp4601;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 
 import com.mongodb.*;
@@ -26,26 +27,17 @@ public class MongoStore {
 		docColl = db.getCollection("pages");
 		graphColl = db.getCollection("graph");
 	}
-	
-	// TODO update to store required information specified in Assignment
-	public void add(Page page, String pageText, String linkText, String imagesText, Date crawlTime) {
-		Document doc = new Document("_id", page.getWebURL().getDocid())
-				.append("URL", page.getWebURL().toString())
-				.append("TEXT", pageText)
-				.append("LINKS", linkText)
-				.append("IMAGES", imagesText)
-				.append("CRAWLTIME", crawlTime);
-		docColl.replaceOne(Filters.eq("_id", page.getWebURL().getDocid()), doc, new UpdateOptions().upsert(true));
-	}
-	
-	// TODO update to store required information specified in Assignment
-	public void addNonHTML(Page page, String text, String metadata, Date crawlTime) {
-		Document doc = new Document("_id", page.getWebURL().getDocid())
-				.append("URL", page.getWebURL().toString())
-				.append("TEXT", text)
-				.append("METADATA", metadata)
-				.append("CRAWLTIME", crawlTime);
-		docColl.replaceOne(Filters.eq("_id", page.getWebURL().getDocid()), doc, new UpdateOptions().upsert(true));
+		
+	public void add(int thisDocId, String name, String url, String content,
+			ArrayList<String> tags, ArrayList<String> links) {
+		Document doc = new Document("_id", thisDocId)
+							.append("name", name)
+							.append("url", url)
+							.append("content", content)
+							.append("tags", tags)
+							.append("links", links)
+							.append("crawltime", new Date());
+		docColl.replaceOne(Filters.eq("_id", thisDocId), doc, new UpdateOptions().upsert(true));
 	}
 	
 	public Document getDocument(int id) {

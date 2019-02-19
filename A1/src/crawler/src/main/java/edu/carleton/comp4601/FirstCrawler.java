@@ -3,6 +3,8 @@ package edu.carleton.comp4601;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import edu.uci.ics.crawler4j.crawler.Page;
@@ -27,7 +29,6 @@ public class FirstCrawler extends WebCrawler {
     // Connection to Mongo
     private static MongoStore mongoStore = new MongoStore();
     private static CrawlerGraph g;
-    int lastID;
     
     public void onStart() {
     	g = new CrawlerGraph("firstGraph");
@@ -42,10 +43,11 @@ public class FirstCrawler extends WebCrawler {
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
     	// For testing my own page, which only has internal links
-    	return true;
+//    	return true;
     	// Assignment requirement 11.1: "prevent off site page visits"
-//        String href = url.getURL().toLowerCase();
-//        return href.startsWith("https://sikaman.dyndns.org");
+        String href = url.getURL().toLowerCase();
+        return href.startsWith("https://sikaman.dyndns.org")
+        	          || href.startsWith("http://lol.jules.lol");
     }
 
     @Override
@@ -79,6 +81,7 @@ public class FirstCrawler extends WebCrawler {
     	
     	// Get page properties via crawler4j methods
         String url = page.getWebURL().getURL();
+        int thisDocId = page.getWebURL().getDocid();
         System.out.println(url);
 
         if (page.getParseData() instanceof HtmlParseData) {
@@ -86,39 +89,39 @@ public class FirstCrawler extends WebCrawler {
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
             String baseURL = url.substring(0, url.lastIndexOf("/")) + "/";
             Document doc = Jsoup.parse(pageHtml, baseURL);	
-            System.out.println(doc.title());
-            
-            // Get page text
-            String pageText = doc.title() + doc.text() + doc.getElementsByTag("meta").attr("description");
-//            System.out.println("Page text:"+pageText);
-            
-            // Get link hrefs and text
-            Elements links = doc.select("a[href]");
-            String linkText = "";
-            for (Element link : links) {
-//            	System.out.println(link.text() + ": " + link.attr("href"));
-            	linkText += link.attr("href") + " " + link.text() + " ";
-            	// Add links to visited pages to graph
+                        
+            // Get page content for SDA Document
+            String name = doc.title();
+            String content = doc.text();
+            ArrayList<String> tags = new ArrayList<String>();
+            for (Element metaTag : doc.getElementsByTag("meta")) {
+            	tags.add(metaTag.attr("content"));
+            }
+            // Add page title to "tags" to ensure that all documents have at least 1 keyword
+            tags.add(name);
+            // Get each link's href and text
+            Elements linkEls = doc.select("a[href]");
+            ArrayList<String> links = new ArrayList<String>();
+            for (Element link : linkEls) {
+            	links.add(link.text() + "\n" + link.attr("href"));
             }
             
-            // Get images
+            // Add alt text from images to content
             String selector = "img[src~=(?i)\\.(png|jpe?g|gif)]";
             Elements images = doc.select(selector);
-            String imagesText = "";
             for (Element image : images) {
-            	imagesText += image.attr("src") + " " + image.attr("alt") + " ";
-//            	System.out.println("Image in HTML:"+imagesText);
+            	content += image.attr("alt") + "\n" + image.attr("src") + "\n";
             }
             
-            // Add to MongoStore
-            mongoStore.add(page, pageText, linkText, imagesText, new Date());
+            // Insert before adding outgoing links
+            // Neccessary to insert here because there may be self-links
+            mongoStore.add(thisDocId, name, url, content, tags, links);
         
-            // Have to add links after, in case link to self
-            for (Element link : links) {
+            for (Element link : linkEls) {
             	// Add links to visited pages to graph
             	try {
             		int linkDocId = mongoStore.getIdByURL(link.attr("abs:href"));
-            		if (linkDocId == page.getWebURL().getDocid()) {
+            		if (linkDocId == thisDocId) {
 //            			System.out.println("Self link at url " + page.getWebURL().toString());
             			g.addEdge(thisV, thisV);
             		} else {
@@ -143,17 +146,20 @@ public class FirstCrawler extends WebCrawler {
     	    	ParseContext context = new ParseContext();
     	    	parser.parse(stream, handler, metadata, context);
     	    	
-    	        String[] metadataNames = metadata.names();
-
-    	        for(String name : metadataNames) {		        
-//    	           System.out.println(name + ": " + metadata.get(name));
-    	        }
-//    	        System.out.println("!!!!!!"+handler.toString());
+    	    	// Text content parsed here
+    	        String content = handler.toString();
     	        
-    	        mongoStore.addNonHTML(page, handler.toString(), metadata.toString(), new Date());
+    	        // Use metadata as tags
+    	        ArrayList<String> tags = new ArrayList<String>();
+    	        for(String name : metadata.names()) {		        
+    	           tags.add(metadata.get(name));
+    	        }
+    	        
+//    	        Not adding outgoing links from non-web documents to the graph
+    	        ArrayList<String> links = new ArrayList<String>();
+    	        mongoStore.add(thisDocId, url.substring(url.lastIndexOf("/")), url, content, tags, links);
     	    	
     	    	stream.close();
-    	    	lastID = page.getWebURL().getDocid();
     	    } catch (Exception e) { }
     	    	
         }
