@@ -1,4 +1,4 @@
-package edu.carleton.comp4601.bank.resources;
+package edu.carleton.comp4601.a1.server.resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,15 +21,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 
-import edu.carleton.comp4601.bank.dao.AccountStore;
-import edu.carleton.comp4601.bank.dao.Accounts;
-import edu.carleton.comp4601.bank.dao.AccountsMongoDB;
-import edu.carleton.comp4601.bank.dao.UserStore;
-import edu.carleton.comp4601.bank.dao.Users;
-import edu.carleton.comp4601.bank.dao.UsersMongoDB;
-import edu.carleton.comp4601.bank.dao.AccountsJAXB;
-import edu.carleton.comp4601.bank.model.Account;
-import edu.carleton.comp4601.bank.model.User;
+import edu.carleton.comp4601.a1.server.dao.AccountStore;
+import edu.carleton.comp4601.a1.server.dao.Accounts;
+import edu.carleton.comp4601.a1.server.dao.AccountsJAXB;
+import edu.carleton.comp4601.a1.server.dao.AccountsMongoDB;
+import edu.carleton.comp4601.a1.server.dao.UserStore;
+import edu.carleton.comp4601.a1.server.dao.Users;
+import edu.carleton.comp4601.a1.server.dao.UsersMongoDB;
+import edu.carleton.comp4601.a1.server.model.Account;
+import edu.carleton.comp4601.a1.server.model.User;
 
 /**
  * This is a simple set of RESTful APIs designed to simulate a 
@@ -54,7 +54,7 @@ public class Bank {
 	public static AccountStore accounts;
 	
 	public static String ACCOUNTS_ADAPTER = "MEMORY";
-	public static String USERS_ADAPTER = "MONGO";
+	public static String USERS_ADAPTER = "MEMORY";
 	
 	public static UserStore users;
 

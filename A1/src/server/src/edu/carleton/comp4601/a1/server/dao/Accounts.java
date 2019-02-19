@@ -1,11 +1,11 @@
-package edu.carleton.comp4601.bank.dao;
+package edu.carleton.comp4601.a1.server.dao;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import edu.carleton.comp4601.bank.model.Account;
+import edu.carleton.comp4601.a1.server.model.Account;
 
 @XmlRootElement
 public class Accounts implements AccountStore {

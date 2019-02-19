@@ -1,4 +1,4 @@
-package edu.carleton.comp4601.bank.dao;
+package edu.carleton.comp4601.a1.server.dao;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +10,7 @@ import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.*;
 
-import edu.carleton.comp4601.bank.model.User;
+import edu.carleton.comp4601.a1.server.model.User;
 
 import org.bson.*;
 
