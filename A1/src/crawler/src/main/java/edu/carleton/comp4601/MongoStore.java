@@ -50,7 +50,7 @@ public class MongoStore {
 			sdaDocument.getContent(),
 			sdaDocument.getTags(),
 			sdaDocument.getLinks(),
-			"Type undefined in sdaDocument",
+			"MIME-type is undefined in sdaDocument",
 			(double) sdaDocument.getScore()
 		);
 	}
