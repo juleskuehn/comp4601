@@ -23,13 +23,13 @@ public class MongoStore {
 
 	public MongoStore() {
 		mongoClient = new MongoClient("localhost", 27017);
-		db = mongoClient.getDatabase("first_crawler");
+		db = mongoClient.getDatabase("crawler");
 		docColl = db.getCollection("pages");
 		graphColl = db.getCollection("graph");
 	}
 		
 	public void add(int thisDocId, String name, String url, String content,
-			ArrayList<String> tags, ArrayList<String> links, String type) {
+			ArrayList<String> tags, ArrayList<String> links, String type, Double score) {
 		Document doc = new Document("_id", thisDocId)
 							.append("name", name)
 							.append("url", url)
@@ -37,8 +37,28 @@ public class MongoStore {
 							.append("tags", tags)
 							.append("links", links)
 							.append("crawltime", new Date())
-							.append("type", type);
+							.append("type", type)
+							.append("score", score);
 		docColl.replaceOne(Filters.eq("_id", thisDocId), doc, new UpdateOptions().upsert(true));
+	}
+	
+	public void add(edu.carleton.comp4601.dao.Document sdaDocument) {
+		add(
+			(int) sdaDocument.getId(),
+			sdaDocument.getName(),
+			sdaDocument.getUrl(),
+			sdaDocument.getContent(),
+			sdaDocument.getTags(),
+			sdaDocument.getLinks(),
+			"Type undefined in sdaDocument",
+			(double) sdaDocument.getScore()
+		);
+	}
+	
+	public void setScore(int id, double newScore) {
+		Document doc = getDocument(id);
+		doc.put("score", newScore);
+		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
 	}
 	
 	public Document getDocument(int id) {
@@ -46,8 +66,12 @@ public class MongoStore {
 		return document;
 	}
 	
+	public edu.carleton.comp4601.dao.Document getSdaDocument(int id) {
+		Document mongoDocument = getDocument(id);
+		return new edu.carleton.comp4601.dao.Document(mongoDocument);
+	}
+	
 	public int getIdByURL(String url) {
-//		System.out.println(url);
 		Document document = docColl.find(Filters.eq("url", url)).first();
 		return Integer.parseInt(document.get("_id").toString());
 	}
@@ -73,6 +97,18 @@ public class MongoStore {
 			System.out.println("No graph found in MongoDB");
 		}
 		return null;
+	}
+	
+	public static void main(String[] args) {
+		// For testing
+		MongoStore store = new MongoStore();
+		edu.carleton.comp4601.dao.Document doc = store.getSdaDocument(7);
+		System.out.println(doc.getName());
+		System.out.println(doc.getUrl());
+		System.out.println(doc.getContent());
+		System.out.println(doc.getScore());
+		System.out.println(doc.getTags());
+		System.out.println(doc.getLinks());
 	}
 
 }

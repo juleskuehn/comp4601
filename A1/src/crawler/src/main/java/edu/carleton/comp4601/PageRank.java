@@ -63,6 +63,7 @@ public class PageRank {
 		return x;
 	}
 	
+	
 	public static void main(String[] args) {
 		// Test case
 		double[][] array = {{0, 1, 0},{1, 0, 1},{0, 1, 0}};

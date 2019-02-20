@@ -18,11 +18,11 @@ public class CrawlerGraph implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String name;
 	private DefaultDirectedGraph<CrawlerVertex, DefaultEdge> g;
-	private ConcurrentHashMap<Long, CrawlerVertex> vertices;
+	private ConcurrentHashMap<Integer, CrawlerVertex> vertices;
 	// When creating an adjacency matrix, need to map indices of rows/cols (same)
 	// to the vertex ID
-	private ConcurrentHashMap<Long, Integer> vIDtoAdjIdx;
-	private ConcurrentHashMap<Integer, Long> adjIdxToVID;
+	public ConcurrentHashMap<Integer, Integer> vIDtoAdjIdx;
+	public ConcurrentHashMap<Integer, Integer> adjIdxToVID;
 	
 	// Keep track of first vertex added as seed for DFS
 	// Note that this only works when there is a single seed
@@ -34,7 +34,7 @@ public class CrawlerGraph implements Serializable {
 		System.out.printf("There are %d vertices.\n", vertices.size());
 		int i = 0;
 		// Create mapping between adjacency array and document indices
-		for (Map.Entry<Long, CrawlerVertex> entry : vertices.entrySet()) {
+		for (Map.Entry<Integer, CrawlerVertex> entry : vertices.entrySet()) {
 			vIDtoAdjIdx.put(entry.getKey(), i);
 			adjIdxToVID.put(i, entry.getKey());
 			i++;
@@ -51,10 +51,10 @@ public class CrawlerGraph implements Serializable {
 
 	public CrawlerGraph(String name) {
 		this.name = name;
-		this.vertices = new ConcurrentHashMap<Long, CrawlerVertex>();
+		this.vertices = new ConcurrentHashMap<Integer, CrawlerVertex>();
 		this.g = new DefaultDirectedGraph<CrawlerVertex, DefaultEdge>(DefaultEdge.class);
-		this.vIDtoAdjIdx = new ConcurrentHashMap<Long, Integer>();
-		this.adjIdxToVID = new ConcurrentHashMap<Integer, Long>();	
+		this.vIDtoAdjIdx = new ConcurrentHashMap<Integer, Integer>();
+		this.adjIdxToVID = new ConcurrentHashMap<Integer, Integer>();	
 	}
 	
 	public synchronized boolean addVertex(CrawlerVertex v) {
@@ -86,7 +86,7 @@ public class CrawlerGraph implements Serializable {
     {
 		String s = "\nCrawlerGraph:\n";
         Iterator<CrawlerVertex> iterator = new DepthFirstIterator<>(g, firstV);
-        for (Map.Entry<Long, CrawlerVertex> entry : vertices.entrySet()) {
+        for (Map.Entry<Integer, CrawlerVertex> entry : vertices.entrySet()) {
 			s += entry.getKey() + " " + entry.getValue().getURL() + "\n";
 		}
         s += "Edges:\n";
@@ -114,11 +114,11 @@ public class CrawlerGraph implements Serializable {
 		this.g = g;
 	}
 
-	public ConcurrentHashMap<Long, CrawlerVertex> getV() {
+	public ConcurrentHashMap<Integer, CrawlerVertex> getV() {
 		return vertices;
 	}
 
-	public void setV(ConcurrentHashMap<Long, CrawlerVertex> v) {
+	public void setV(ConcurrentHashMap<Integer, CrawlerVertex> v) {
 		this.vertices = v;
 	}
 

@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
@@ -18,10 +19,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import Jama.Matrix;
 import edu.uci.ics.crawler4j.parser.HtmlParseData;
 import edu.uci.ics.crawler4j.url.WebURL;
 
-public class FirstCrawler extends WebCrawler {
+public class Crawler extends WebCrawler {
 
 	// TODO: Update to allow only the formats specified in Assignment
 //    private static final Pattern ALLOW_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png|tif|jpeg|tiff)$");
@@ -65,8 +67,8 @@ public class FirstCrawler extends WebCrawler {
     	myController.getConfig().setPolitenessDelay(Math.max(responseTime * 10, minDelay));
     	System.out.println("\n\n\nAdaptive response time: " + responseTime * 10);
     	
-    	long thisID = (long) page.getWebURL().getDocid();
-    	long parentID = (long) page.getWebURL().getParentDocid();
+    	int thisID = page.getWebURL().getDocid();
+    	int parentID = page.getWebURL().getParentDocid();
     	
     	// Add to graph
     	CrawlerVertex thisV = g.getV().get(thisID);
@@ -117,7 +119,7 @@ public class FirstCrawler extends WebCrawler {
             
             // Insert before adding outgoing links
             // Neccessary to insert here because there may be self-links
-            mongoStore.add(thisDocId, name, url, content, tags, links, page.getContentType());
+            mongoStore.add(thisDocId, name, url, content, tags, links, page.getContentType(), 0.);
         
             for (Element link : linkEls) {
             	// Add links to visited pages to graph
@@ -129,7 +131,7 @@ public class FirstCrawler extends WebCrawler {
             		} else {
 //            		System.out.printf("%d linkDocId Found!!", linkDocId);
             			// Add to graph
-            			CrawlerVertex linkedV = g.getV().get((long) linkDocId);
+            			CrawlerVertex linkedV = g.getV().get(linkDocId);
             			g.addEdge(thisV, linkedV);
             		}
             	} catch (Exception e) {
@@ -159,13 +161,24 @@ public class FirstCrawler extends WebCrawler {
     	        
 //    	        Not adding outgoing links from non-web documents to the graph
     	        ArrayList<String> links = new ArrayList<String>();
-    	        mongoStore.add(thisDocId, url.substring(url.lastIndexOf("/")), url, content, tags, links, page.getContentType());
+    	        mongoStore.add(thisDocId, url.substring(url.lastIndexOf("/")+1), url, content, tags, links, page.getContentType(), 0.);
     	    	
     	    	stream.close();
     	    } catch (Exception e) { }
     	    	
         }
     }
+    
+    // TODO Move this to a more general location
+    // since it needs to be called when index is manually updated
+	public static void scorePages() {
+		Matrix PR = PageRank.computePageRank(g.toAdjMatrix());
+		double[] scores = PR.getArray()[0];
+		for (int i=0;i<scores.length;i++) {
+			int docId = g.adjIdxToVID.get(i);
+			mongoStore.setScore(docId, scores[i]);
+		}
+	}
     
     // (Shady) singleton pattern to communicate between threads
     @SuppressWarnings("static-access")
@@ -174,7 +187,7 @@ public class FirstCrawler extends WebCrawler {
     	if (CrawlerSharedConfig.getInstance().firstToFinish) {
     		// (Prevent printing multiple times)
     		System.out.println(g);
-    		PageRank.computePageRank(g.toAdjMatrix());
+    		scorePages();
     		GraphLayoutVisualizer.visualizeGraph(g.getG());
     		CrawlerSharedConfig.getInstance().firstToFinish = false;
     	}
