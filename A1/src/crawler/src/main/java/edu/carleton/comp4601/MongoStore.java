@@ -3,6 +3,7 @@ package edu.carleton.comp4601;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.mongodb.*;
 import com.mongodb.client.*;
@@ -98,13 +99,13 @@ public class MongoStore {
 	}
 	
 	public boolean deleteAllWithTag(String tag) {
-		return docColl.deleteMany(Filters.elemMatch("tags", Filters.eq(tag))).getDeletedCount() > 0;
+		return docColl.deleteMany(Filters.eq("tags", tag)).getDeletedCount() > 0;
 	}
 	
 	public edu.carleton.comp4601.dao.DocumentCollection getByTag(String tag) {
 		edu.carleton.comp4601.dao.DocumentCollection coll = new edu.carleton.comp4601.dao.DocumentCollection();
 		ArrayList<edu.carleton.comp4601.dao.Document> tmpList = new ArrayList<edu.carleton.comp4601.dao.Document>();
-		FindIterable<Document> docs = docColl.find(Filters.elemMatch("tags", Filters.eq(tag)));
+		FindIterable<Document> docs = tag == null ? docColl.find() : docColl.find(Filters.eq("tags", tag));
 		MongoCursor<Document> cursor = docs.iterator();
         try {
             while(cursor.hasNext()) {               
@@ -115,6 +116,10 @@ public class MongoStore {
         }
         coll.setDocuments(tmpList);
 		return coll;
+	}
+	
+	public edu.carleton.comp4601.dao.DocumentCollection getAll() {
+		return getByTag(null);
 	}
 	
 	public void addLink(int id, String linkUrl) {
@@ -160,11 +165,15 @@ public class MongoStore {
 	}
 	
 	public static void main(String[] args) {
-		// For testing
+		// For testing class methods
 		MongoStore store = new MongoStore();
-		store.addTag(3, "cool to be number 1");
-		store.addTag(4, "cool to be number 1");
-		edu.carleton.comp4601.dao.Document doc = store.getSdaDocument(4);
+		
+		String tag = "cool to be number 1";
+		store.addTag(1, tag);
+		store.addTag(2, tag);
+		
+		System.out.println("\nFirst document:");
+		edu.carleton.comp4601.dao.Document doc = store.getSdaDocument(1);
 		System.out.println(doc.getId());
 		System.out.println(doc.getName());
 		System.out.println(doc.getUrl());
@@ -172,7 +181,19 @@ public class MongoStore {
 		System.out.println(doc.getScore());
 		System.out.println(doc.getTags());
 		System.out.println(doc.getLinks());
-		store.deleteAllWithTag("cool to be number 1");
+		
+		System.out.println("\nDocs matching tag:");
+		List<edu.carleton.comp4601.dao.Document> docList = store.getByTag(tag).getDocuments();
+		for (edu.carleton.comp4601.dao.Document d : docList) {
+			System.out.println(d.getName());
+		}
+		
+		System.out.println("\nAll docs plus pagerank:");
+		docList = store.getAll().getDocuments();
+		for (edu.carleton.comp4601.dao.Document d : docList) {
+			System.out.println("\n _id: " + d.getId() + "   " + d.getUrl());
+			System.out.println("pagerank: " + d.getScore());
+		}
 	}
 
 }
