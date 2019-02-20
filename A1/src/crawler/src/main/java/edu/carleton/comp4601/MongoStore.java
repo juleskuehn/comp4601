@@ -27,7 +27,8 @@ public class MongoStore {
 		docColl = db.getCollection("pages");
 		graphColl = db.getCollection("graph");
 	}
-		
+	
+	// Core document functions used by Crawler
 	public void add(int thisDocId, String name, String url, String content,
 			ArrayList<String> tags, ArrayList<String> links, String type, Double score) {
 		Document doc = new Document("_id", thisDocId)
@@ -42,6 +43,24 @@ public class MongoStore {
 		docColl.replaceOne(Filters.eq("_id", thisDocId), doc, new UpdateOptions().upsert(true));
 	}
 	
+	public Document getDocument(int id) {
+		Document document = docColl.find(Filters.eq("_id", id)).first();
+		return document;
+	}
+	
+	public int getIdByURL(String url) {
+		Document document = docColl.find(Filters.eq("url", url)).first();
+		return Integer.parseInt(document.get("_id").toString());
+	}
+	
+	public void setScore(int id, double newScore) {
+		Document doc = getDocument(id);
+		doc.put("score", newScore);
+		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
+	}
+	
+	// Convenience functions for interaction with front-end
+	// TODO ensure return types match with assignment requirements
 	public void add(edu.carleton.comp4601.dao.Document sdaDocument) {
 		add(
 			(int) sdaDocument.getId(),
@@ -55,28 +74,69 @@ public class MongoStore {
 		);
 	}
 	
-	public void setScore(int id, double newScore) {
+	public edu.carleton.comp4601.dao.Document getSdaDocument(int id) {
+		Document mongoDocument = getDocument(id);
+		return toSdaDocument(mongoDocument);
+	}
+	
+	// This nastiness is because the SDA Document class takes a Float (not a Double) for score
+	// Otherwise, we could use the Document(mongoDocument) map constructor
+	public edu.carleton.comp4601.dao.Document toSdaDocument(Document mongoDocument) {
+		edu.carleton.comp4601.dao.Document sdaDocument = new edu.carleton.comp4601.dao.Document();
+		sdaDocument.setId(mongoDocument.getInteger("_id"));
+		sdaDocument.setName(mongoDocument.getString("name"));
+		sdaDocument.setUrl(mongoDocument.getString("url"));
+		sdaDocument.setContent(mongoDocument.getString("content"));
+		sdaDocument.setTags((ArrayList<String>) mongoDocument.get("tags"));
+		sdaDocument.setLinks((ArrayList<String>) mongoDocument.get("links"));
+		sdaDocument.setScore(((Double) mongoDocument.get("score")).floatValue());
+		return sdaDocument;
+	}
+	
+	public boolean deleteOne(int id) {
+		return docColl.deleteOne(Filters.eq("_id", id)).getDeletedCount() > 0;
+	}
+	
+	public boolean deleteAllWithTag(String tag) {
+		return docColl.deleteMany(Filters.elemMatch("tags", Filters.eq(tag))).getDeletedCount() > 0;
+	}
+	
+	public edu.carleton.comp4601.dao.DocumentCollection getByTag(String tag) {
+		edu.carleton.comp4601.dao.DocumentCollection coll = new edu.carleton.comp4601.dao.DocumentCollection();
+		ArrayList<edu.carleton.comp4601.dao.Document> tmpList = new ArrayList<edu.carleton.comp4601.dao.Document>();
+		FindIterable<Document> docs = docColl.find(Filters.elemMatch("tags", Filters.eq(tag)));
+		MongoCursor<Document> cursor = docs.iterator();
+        try {
+            while(cursor.hasNext()) {               
+                tmpList.add(toSdaDocument(cursor.next()));
+            }
+        } finally {
+            cursor.close();
+        }
+        coll.setDocuments(tmpList);
+		return coll;
+	}
+	
+	public void addLink(int id, String linkUrl) {
 		Document doc = getDocument(id);
-		doc.put("score", newScore);
+		ArrayList<String> links = (ArrayList<String>) doc.get("links");
+		links.add(linkUrl);
+		doc.put("links", links);
 		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
 	}
 	
-	public Document getDocument(int id) {
-		Document document = docColl.find(Filters.eq("_id", id)).first();
-		return document;
+	public void addTag(int id, String tag) {
+		Document doc = getDocument(id);
+		ArrayList<String> tags = (ArrayList<String>) doc.get("tags");
+		tags.add(tag);
+		doc.put("tags", tags);
+		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
 	}
+
 	
-	public edu.carleton.comp4601.dao.Document getSdaDocument(int id) {
-		Document mongoDocument = getDocument(id);
-		return new edu.carleton.comp4601.dao.Document(mongoDocument);
-	}
-	
-	public int getIdByURL(String url) {
-		Document document = docColl.find(Filters.eq("url", url)).first();
-		return Integer.parseInt(document.get("_id").toString());
-	}
-	
-	public void add(CrawlerGraph g) {
+	/////////////////
+	// Graph
+	public void addGraph(CrawlerGraph g) {
 		Document graph;
 		try {
 			graph = new Document("_id", 1).append("Bytestream", Marshaller.serializeObject(g));
@@ -102,13 +162,17 @@ public class MongoStore {
 	public static void main(String[] args) {
 		// For testing
 		MongoStore store = new MongoStore();
-		edu.carleton.comp4601.dao.Document doc = store.getSdaDocument(7);
+		store.addTag(3, "cool to be number 1");
+		store.addTag(4, "cool to be number 1");
+		edu.carleton.comp4601.dao.Document doc = store.getSdaDocument(4);
+		System.out.println(doc.getId());
 		System.out.println(doc.getName());
 		System.out.println(doc.getUrl());
 		System.out.println(doc.getContent());
 		System.out.println(doc.getScore());
 		System.out.println(doc.getTags());
 		System.out.println(doc.getLinks());
+		store.deleteAllWithTag("cool to be number 1");
 	}
 
 }

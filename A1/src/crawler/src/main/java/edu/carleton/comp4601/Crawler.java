@@ -192,7 +192,7 @@ public class Crawler extends WebCrawler {
     		CrawlerSharedConfig.getInstance().firstToFinish = false;
     	}
     	// Save the serialized graph to Mongo
-    	mongoStore.add(g);
+    	mongoStore.addGraph(g);
     }
     
 }
