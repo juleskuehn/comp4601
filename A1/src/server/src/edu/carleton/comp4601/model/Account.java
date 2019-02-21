@@ -1,4 +1,4 @@
-package edu.carleton.comp4601.a1.server.model;
+package edu.carleton.comp4601.model;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

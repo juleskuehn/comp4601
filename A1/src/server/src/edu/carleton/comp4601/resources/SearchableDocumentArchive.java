@@ -1,4 +1,4 @@
-package edu.carleton.comp4601.a1.server.resources;
+package edu.carleton.comp4601.resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,29 +21,19 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 
-import edu.carleton.comp4601.a1.server.dao.AccountStore;
-import edu.carleton.comp4601.a1.server.dao.Accounts;
-import edu.carleton.comp4601.a1.server.dao.AccountsJAXB;
-import edu.carleton.comp4601.a1.server.dao.AccountsMongoDB;
-import edu.carleton.comp4601.a1.server.dao.UserStore;
-import edu.carleton.comp4601.a1.server.dao.Users;
-import edu.carleton.comp4601.a1.server.dao.UsersMongoDB;
-import edu.carleton.comp4601.a1.server.model.Account;
-import edu.carleton.comp4601.a1.server.model.User;
+import edu.carleton.comp4601.dao.AccountStore;
+import edu.carleton.comp4601.dao.Accounts;
+import edu.carleton.comp4601.dao.AccountsJAXB;
+import edu.carleton.comp4601.dao.AccountsMongoDB;
+import edu.carleton.comp4601.dao.UserStore;
+import edu.carleton.comp4601.dao.Users;
+import edu.carleton.comp4601.dao.UsersMongoDB;
+import edu.carleton.comp4601.model.Account;
+import edu.carleton.comp4601.model.User;
 
-/**
- * This is a simple set of RESTful APIs designed to simulate a 
- * bank with numbered bank accounts. No security is provided. It
- * is designed to show off Jersey 2.X functionality. Serialization
- * of accounts is supported. The BankClient can be used to talk to the 
- * bank as can a standard browser. 
- * 
- * @author tonywhite
- *
- */
 
-@Path("/bank")
-public class Bank {
+@Path("/sda")
+public class SearchableDocumentArchive {
 	// Allows to insert contextual objects into the class,
 	// e.g. ServletContext, Request, Response, UriInfo
 	@Context
@@ -60,8 +50,10 @@ public class Bank {
 
 	private String name;
 
-	public Bank() {
-		name = "The RESTful Bank";
+	public SearchableDocumentArchive() {
+		
+		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
+		
 		switch(ACCOUNTS_ADAPTER) {
 		case "MEMORY":
 			accounts = Accounts.getInstance();

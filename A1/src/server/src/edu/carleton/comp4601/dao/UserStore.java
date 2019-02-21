@@ -1,8 +1,8 @@
-package edu.carleton.comp4601.a1.server.dao;
+package edu.carleton.comp4601.dao;
 
 import java.util.Map;
 
-import edu.carleton.comp4601.a1.server.model.User;
+import edu.carleton.comp4601.model.User;
 
 public interface UserStore {
 	User find(int id);

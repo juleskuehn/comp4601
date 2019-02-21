@@ -1,8 +1,8 @@
-package edu.carleton.comp4601.a1.server.dao;
+package edu.carleton.comp4601.dao;
 
 import java.util.Map;
 
-import edu.carleton.comp4601.a1.server.model.Account;
+import edu.carleton.comp4601.model.Account;
 
 public interface AccountStore {
 	Account find(int id);

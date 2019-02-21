@@ -1,11 +1,11 @@
-package edu.carleton.comp4601.a1.server.dao;
+package edu.carleton.comp4601.dao;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import edu.carleton.comp4601.a1.server.model.Account;
+import edu.carleton.comp4601.model.Account;
 
 import java.io.File;
 import java.io.FileNotFoundException;
