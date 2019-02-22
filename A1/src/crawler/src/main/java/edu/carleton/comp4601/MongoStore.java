@@ -21,6 +21,10 @@ public class MongoStore {
 	private MongoDatabase db;
 	private MongoCollection<Document> docColl;
 	private MongoCollection<Document> graphColl;
+	
+	public MongoCollection<Document> getDocColl() {
+		return docColl;
+	}
 
 	public MongoStore() {
 		mongoClient = new MongoClient("localhost", 27017);
@@ -44,7 +48,7 @@ public class MongoStore {
 		docColl.replaceOne(Filters.eq("_id", thisDocId), doc, new UpdateOptions().upsert(true));
 	}
 	
-	public Document getDocument(int id) {
+	public Document find(int id) {
 		Document document = docColl.find(Filters.eq("_id", id)).first();
 		return document;
 	}
@@ -55,7 +59,7 @@ public class MongoStore {
 	}
 	
 	public void setScore(int id, double newScore) {
-		Document doc = getDocument(id);
+		Document doc = find(id);
 		doc.put("score", newScore);
 		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
 	}
@@ -75,8 +79,8 @@ public class MongoStore {
 		);
 	}
 	
-	public edu.carleton.comp4601.dao.Document getSdaDocument(int id) {
-		Document mongoDocument = getDocument(id);
+	public edu.carleton.comp4601.dao.Document getDocument(int id) {
+		Document mongoDocument = find(id);
 		return toSdaDocument(mongoDocument);
 	}
 	
@@ -123,7 +127,7 @@ public class MongoStore {
 	}
 	
 	public void addLink(int id, String linkUrl) {
-		Document doc = getDocument(id);
+		Document doc = find(id);
 		ArrayList<String> links = (ArrayList<String>) doc.get("links");
 		links.add(linkUrl);
 		doc.put("links", links);
@@ -131,7 +135,7 @@ public class MongoStore {
 	}
 	
 	public void addTag(int id, String tag) {
-		Document doc = getDocument(id);
+		Document doc = find(id);
 		ArrayList<String> tags = (ArrayList<String>) doc.get("tags");
 		tags.add(tag);
 		doc.put("tags", tags);
@@ -173,7 +177,7 @@ public class MongoStore {
 		store.addTag(2, tag);
 		
 		System.out.println("\nFirst document:");
-		edu.carleton.comp4601.dao.Document doc = store.getSdaDocument(1);
+		edu.carleton.comp4601.dao.Document doc = store.getDocument(1);
 		System.out.println(doc.getId());
 		System.out.println(doc.getName());
 		System.out.println(doc.getUrl());
