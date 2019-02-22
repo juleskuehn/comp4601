@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -43,6 +44,9 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 
+import Jama.Matrix;
+
+// See usage in main() below
 public class LuceneFacade {
 	
 	public static String COMP_4601_BASE = System.getProperty("user.home") + File.separator;
@@ -53,7 +57,7 @@ public class LuceneFacade {
     }
     
     @SuppressWarnings("unused")
-	public void index(boolean create) {
+	public void index(boolean create, boolean boost) {
     	String indexPath = COMP_4601_BASE + "lucene_temp/";
         Date start = new Date();
         try {
@@ -73,7 +77,7 @@ public class LuceneFacade {
             }
             
             IndexWriter writer = new IndexWriter(dir, iwc);
-            indexDocs(writer, mongoStore.getDocColl());
+            indexDocs(writer, mongoStore.getDocColl(), boost);
             writer.close();
 
             Date end = new Date();
@@ -92,13 +96,12 @@ public class LuceneFacade {
      * @param docColl MongoCollection to index
      * @throws IOException If there is a low-level I/O error
      */
-    static void indexDocs(final IndexWriter writer, MongoCollection<org.bson.Document> docColl) throws IOException {
-    	
+    static void indexDocs(final IndexWriter writer, MongoCollection<org.bson.Document> docColl, boolean boost) throws IOException {
     	FindIterable<org.bson.Document> docs = docColl.find();
 		MongoCursor<org.bson.Document> cursor = docs.iterator();
         try {
             while(cursor.hasNext()) {               
-            	indexDoc(writer, cursor.next());
+            	indexDoc(writer, cursor.next(), boost);
             }
         } finally {
             cursor.close();
@@ -106,15 +109,38 @@ public class LuceneFacade {
     }
 
     /** Indexes a single document */
-    static void indexDoc(IndexWriter writer, org.bson.Document mongoDoc) throws IOException {
+    @SuppressWarnings("deprecation")
+	static void indexDoc(IndexWriter writer, org.bson.Document mongoDoc, boolean boost) throws IOException {
         Document luceneDoc = new Document();
+        
         luceneDoc.add(new StringField("url", mongoDoc.getString("url"), Field.Store.YES));
         luceneDoc.add(new IntPoint("docId", mongoDoc.getInteger("_id")));
         luceneDoc.add(new StringField("i", "Jules Kuehn and Brian Ferch",  Field.Store.YES));
         luceneDoc.add(new LongPoint("date", ((Date) mongoDoc.get("crawltime")).getTime()));
-        // Text of the file is tokenized and indexed, but not stored.
-        luceneDoc.add(new TextField("content", new StringReader(mongoDoc.getString("content"))));
         luceneDoc.add(new StringField("type", mongoDoc.getString("type"), Field.Store.YES));
+        
+        // Add searchable content (body text, title, URL, MIME-type)
+        String content = mongoDoc.getString("content") + " ";
+        content += mongoDoc.getString("name") + " ";
+        content += mongoDoc.getString("url") + " ";
+        content += mongoDoc.getString("type") + " ";
+        TextField tfContent = new TextField("content", new StringReader(content));
+        // Apply PageRank score as boost on the content field only
+        if (boost)
+        	tfContent.setBoost(mongoDoc.getDouble("score").floatValue());
+        luceneDoc.add(tfContent);
+        
+        // Add searchable tags
+        String tags = "";
+        ArrayList<String> tagsList = (ArrayList<String>) mongoDoc.get("tags");
+        for (String tag : tagsList) {
+        	tags += tag + " ";
+        }
+        TextField tfTags = new TextField("tags", new StringReader(tags));
+        // Default
+        tfContent.setBoost(2);
+        luceneDoc.add(tfTags);
+
 
         if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
             // New index, so we just add the document (no old document can be there):
@@ -132,8 +158,12 @@ public class LuceneFacade {
 
     public static void main(String[] args) {
         LuceneFacade myLuceneFacade = new LuceneFacade();
-        // Argument is boolean: Create new index? (If false, loads existing index)
-        myLuceneFacade.index(true);
+        // Create new index with boost. Arguments are (forceCreateIndex, applyBoost)
+        myLuceneFacade.index(true, true);
+        // TODO attempts to Update (rather than delete and create)
+        // the index are resulting in duplicate entries
+        myLuceneFacade.index(true, true);
+        // To re-index with boost, call as "myLuceneFacade.index(false, true);"
     }
    
 }

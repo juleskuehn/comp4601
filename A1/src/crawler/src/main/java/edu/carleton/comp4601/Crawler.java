@@ -33,13 +33,13 @@ public class Crawler extends WebCrawler {
     private static CrawlerGraph g;
     
     public void onStart() {
-    	g = new CrawlerGraph("firstGraph");
-    	// Create graph if one doesn't exist in DB, otherwise load existing graph
-    	if (mongoStore.getGraph() == null) {
-        	g = new CrawlerGraph("firstGraph");
-        } else {
-        	g = mongoStore.getGraph();
-        }
+    	g = new CrawlerGraph("crawlerGraph");
+//    	// Create graph if one doesn't exist in DB, otherwise load existing graph
+//    	if (mongoStore.getGraph() == null) {
+//        	g = new CrawlerGraph("crawlerGraph");
+//        } else {
+//        	g = mongoStore.getGraph();
+//        }
     }
     
     @Override
@@ -97,11 +97,11 @@ public class Crawler extends WebCrawler {
             String content = doc.text();
             
             ArrayList<String> tags = new ArrayList<String>();
-//            for (Element metaTag : doc.getElementsByTag("meta")) {
-//            	tags.add(metaTag.attr("content"));
-//            }
-            // Add page title to "tags" to ensure that all documents have at least 1 keyword
-//            tags.add(name);
+            for (Element metaTag : doc.getElementsByTag("meta")) {
+            	tags.add(metaTag.attr("content"));
+            }
+//             Add page title to "tags" to ensure that all documents have at least 1 keyword
+            tags.add(name);
             
             // Get each link's href and text
             Elements linkEls = doc.select("a[href]");

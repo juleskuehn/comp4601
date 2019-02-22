@@ -59,7 +59,7 @@ public class SearchFiles {
         String queries = null;
         int repeat = 0;
         boolean raw = false;
-        String queryString = "peach";
+        String queryString = "eclipse";
         int hitsPerPage = 10;
 
         for (int i = 0; i < args.length; i++) {
