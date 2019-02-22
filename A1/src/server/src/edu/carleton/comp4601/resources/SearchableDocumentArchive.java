@@ -2,6 +2,7 @@ package edu.carleton.comp4601.resources;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.*;
@@ -21,15 +22,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 
-import edu.carleton.comp4601.dao.AccountStore;
-import edu.carleton.comp4601.dao.Accounts;
-import edu.carleton.comp4601.dao.AccountsJAXB;
-import edu.carleton.comp4601.dao.AccountsMongoDB;
-import edu.carleton.comp4601.dao.UserStore;
-import edu.carleton.comp4601.dao.Users;
-import edu.carleton.comp4601.dao.UsersMongoDB;
-import edu.carleton.comp4601.model.Account;
-import edu.carleton.comp4601.model.User;
+import edu.carleton.comp4601.resources.MongoStore;
+import edu.carleton.comp4601.dao.Document;
 
 
 @Path("/sda")
@@ -40,181 +34,106 @@ public class SearchableDocumentArchive {
 	UriInfo uriInfo;
 	@Context
 	Request request;
-	
-	public static AccountStore accounts;
-	
-	public static String ACCOUNTS_ADAPTER = "MEMORY";
-	public static String USERS_ADAPTER = "MEMORY";
-	
-	public static UserStore users;
 
+	private static String BASE_URL = "http://localhost:8080/COMP4601-SDA/rest/sda/";
+	public static MongoStore store;
 	private String name;
 
 	public SearchableDocumentArchive() {
 		
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		
-		switch(ACCOUNTS_ADAPTER) {
-		case "MEMORY":
-			accounts = Accounts.getInstance();
-			break;
-		case "MONGO":
-			accounts = AccountsMongoDB.getInstance();
-			break;
-		case "JAXB":
-			accounts = AccountsJAXB.getInstance();
-			break;
-		}
-		
-		switch(USERS_ADAPTER) {
-		case "MEMORY":
-			users = Users.getInstance();
-			break;
-		case "MONGO":
-			users = UsersMongoDB.getInstance();
-			break;
-		}
+		store = MongoStore.getInstance();
 	}
 
 	@GET
 	public String printName() {
 		return name;
 	}
-
-	@GET
-	@Produces(MediaType.TEXT_XML)
-	public String sayXML() {
-		return "<?xml version=\"1.0\"?>" + "<bank> " + name + " </bank>";
-	}
-
-	@GET
-	@Produces(MediaType.TEXT_HTML)
-	public String sayHtml() {
-		return "<html> " + "<title>" + name + "</title>" + "<body><h1>" + name
-				+ "</body></h1>" + "</html> ";
-	}
-
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public String sayJSON() {
-		return "{\"" + name + "\"}";
-	}
-
-	@GET
-	@Path("count")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getCount() {
-		long count = accounts.size();
-		return String.valueOf(count);
-	}
-
-	@GET
-	@Path("accounts")
-	@Produces(MediaType.TEXT_XML)
-	public List<Account> getAccounts() {
-		List<Account> loa = new ArrayList<Account>();
-		loa.addAll(accounts.getModel().values());
-		return loa;
-	}
-
+	
 	@POST
-	@Produces(MediaType.TEXT_HTML)
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public void newAccount(@FormParam("id") String id,
-			@FormParam("balance") String balance,
-			@FormParam("description") String description,
-			@Context HttpServletResponse servletResponse) throws IOException {
-
-		String newDescription = description;
-		if (newDescription == null)
-			newDescription = "";
-
-		int newId = new Integer(id).intValue();
-		int newBalance = new Integer(balance).intValue();
-		accounts.open(newId, newBalance, newDescription);
-
-		servletResponse.sendRedirect("../create_account.html");
-	}
-
-	@Path("{acct}")
-	public AccountAction getAccount(@PathParam("acct") String id) {
-		return new AccountAction(uriInfo, request, id, accounts);
-	}
-	
-	@Path("users")
-	public UsersAction getUsers() {
-		return new UsersAction(uriInfo, request, users);
+	public Response createDocument(@FormParam("id") String id,
+							   @FormParam("name") String name,
+							   @FormParam("content") String content,
+							   @FormParam("url") String url, 
+							   @FormParam("tags") String tags,
+							   @FormParam("links") String links) throws IOException {
+		
+		Document doc = new Document();
+		doc.setId(new Integer(id).intValue());
+		doc.setName(name);
+		doc.setContent(content);
+		doc.setUrl(BASE_URL + id);
+		doc.setTags(formTagsToList(tags));
+		doc.setLinks(formLinksToList(links));
+		doc.setScore(0f);
+		store.add(doc);
+		
+		return Response.status(200).build();
 	}
 	
-	
-	// Users
-	
-	public class UsersAction {
-		@Context
-		UriInfo uriInfo;
-		@Context
-		Request request;
-		
-		Integer id;
-		UserStore users;
-		
-		public UsersAction(UriInfo uriInfo, Request request, UserStore users) {
-			this.uriInfo = uriInfo;
-			this.request = request;
-			this.users = users;
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("{docId}")
+	public String getDocument(@PathParam("docId") String _id) {
+		int id = new Integer(_id).intValue();
+		Document doc = store.getDocument(id);
+		return documentToHTML(doc);
+	}
+
+	public String documentToHTML(Document doc) {
+		String HTMLLinks = "";
+		for (String link : doc.getLinks()) {
+			HTMLLinks += "<a href=\"" + link + "\">" + link + "</a>";
 		}
-		
-		@Path("{user}")
-		public UserAction getUser(@PathParam("user") String id) {
-			return new UserAction(uriInfo, request, id, users);
-		}
+		return "<html><head><title>" + doc.getName() + "</title><meta charset=\"UTF-8\">" + 
+		"<meta name=\"description\" content=\"COMP 4601 Assignment 1\">" +
+		"<meta name=\"tags\" content=\"" + String.join(", ", doc.getTags()) + "\">" +
+		"<meta name=\"author\" content=\"Brian Ferch\"></head><body>" + 
+		"<p>" + doc.getContent() + "</p>" +
+		HTMLLinks +
+		"</body></html>";		
 	}
 	
-	public class UserAction {
-		@Context
-		UriInfo uriInfo;
-		@Context
-		Request request;
-		
-		Integer id;
-		UserStore users;
-		
-		public UserAction(UriInfo uriInfo, Request request, String id, UserStore users) {
-			this.uriInfo = uriInfo;
-			this.request = request;
-			this.id = new Integer(id);
-			this.users = users;
-		}
-		
-		@GET
-		@Produces(MediaType.APPLICATION_XML)
-		public User getUser() {
-			User user = users.find(id);
-			if (user == null) {
-				throw new RuntimeException("No such user: " + id);
-			}
-			return user;
-		}
-
-		@PUT
-		@Consumes(MediaType.APPLICATION_XML)
-		public Response putUser(JAXBElement<User> usr) {
-			try {
-				User user = usr.getValue();
-				if (users.find(user.getId()) != null)
-					users.update(user);
-				else
-					users.create(user.getId(), user.getName());
-				return Response.created(uriInfo.getAbsolutePath()).build();
-			} catch (Exception e) {
-				return Response.notModified(e.getMessage()).build();
-			}
-		}
-		
-		@DELETE
-		public void deleteUser() {
-			if (!users.delete(id))
-				throw new RuntimeException("User " + id + " not found");
-		}
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/edit/{docId}")
+	public String getDocumentEditForm(@PathParam("docId") String _id) {
+		int id = new Integer(_id).intValue();
+		Document doc = store.getDocument(id);
+		return documentToHTML(doc) + 
+		"<form action=\"../" + doc.getId() + "\" method=\"POST\">" + 
+		"<br/><label for=\"tags\">Edit Tags</label><br/>" + 
+		"<input name=\"tags\" type=\"text\" value=\"" + String.join(", ", doc.getTags()) + "\"/>" +
+		"<br/><input type=\"submit\" value=\"Submit\"/>\n" + 
+		"</form>";
+		//"<label for=\"links\">Edit Links</label><br/>" +
+		//"<input name=\"links\" type=\"text\" value=\"" +  + "\"/>" +
+	}
+	
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Path("{docId}")
+	public Response updateDocument(@PathParam("docId") String _id,
+								   @FormParam("tags") String tags) throws IOException {
+		int id = new Integer(_id).intValue();
+		Document doc = store.getDocument(id);
+		doc.setTags(formTagsToList(tags));
+		//doc.setLinks(formLinksToList(links));
+		store.update(doc);
+		return Response.status(200).build();
+	}
+	
+	public ArrayList<String> formTagsToList(String tags) {
+		List<String> list = Arrays.asList(tags.split(","));
+		list.replaceAll(tag -> tag.trim());
+		return new ArrayList<String>(list);
+	}
+	
+	public ArrayList<String> formLinksToList(String links) {
+	    List<String> list = Arrays.asList(links.split(","));
+	    list.replaceAll(linkText -> BASE_URL + linkText.trim());
+		return new ArrayList<String>(list);
 	}
 }
