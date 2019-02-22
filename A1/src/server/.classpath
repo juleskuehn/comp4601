@@ -22,8 +22,8 @@
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/javax.websocket-api-1.1.jar"/>
-	<classpathentry kind="lib" path="lib/sda-1.1a.jar"/>
-	<classpathentry kind="lib" path="lib/tyrus-client-1.14.jar"/>
+	<classpathentry kind="lib" path="comp4601/lib/sda-1.1b.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A1/src/crawler/lib/javax.websocket-api-1.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A1/src/crawler/lib/tyrus-client-1.14.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

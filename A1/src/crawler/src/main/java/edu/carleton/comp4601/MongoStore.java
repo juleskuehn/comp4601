@@ -28,7 +28,7 @@ public class MongoStore {
 
 	public MongoStore() {
 		mongoClient = new MongoClient("localhost", 27017);
-		db = mongoClient.getDatabase("crawler");
+		db = mongoClient.getDatabase("sda");
 		docColl = db.getCollection("pages");
 		graphColl = db.getCollection("graph");
 	}
