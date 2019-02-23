@@ -47,7 +47,7 @@ public class SearchableDocumentArchive {
 		
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
-		lucene = LuceneFacade.getInstance();
+		lucene = new LuceneFacade();
 		tableFormatter = new HTMLTableFormatter();
 	}
 
@@ -181,7 +181,7 @@ public class SearchableDocumentArchive {
 		try {
 	        lucene.index(true, true);
 			return HTMLMessage("Reset success");
-		} catch(IOException e) {
+		} catch(Exception e) {
 			return HTMLMessage("Error occured while indexing: " + e.getMessage());
 		}
 	}
@@ -204,7 +204,7 @@ public class SearchableDocumentArchive {
 		try {
 	        lucene.index(false, true);
 			return HTMLMessage("Boost success");
-		} catch(IOException e) {
+		} catch(Exception e) {
 			return HTMLMessage("Error occured while boosting: " + e.getMessage());
 		}	
 	}
@@ -216,7 +216,7 @@ public class SearchableDocumentArchive {
 		try {
 	        lucene.index(false, false);
 			return HTMLMessage("No Boost Success");
-		} catch(IOException e) {
+		} catch(Exception e) {
 			return HTMLMessage("Error occured while no-boosting: " + e.getMessage());
 		}
 	}

@@ -42,6 +42,10 @@ public class MongoStore {
 		docColl = db.getCollection("pages");
 	}
 	
+	public MongoCollection<Document> getDocColl() {
+		return docColl;
+	}
+	
 	public void reindex() {
 		try {
 			index(true, true);
