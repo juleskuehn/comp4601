@@ -23,7 +23,9 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
 
 import edu.carleton.comp4601.resources.MongoStore;
+import edu.carleton.comp4601.utility.HTMLTableFormatter;
 import edu.carleton.comp4601.dao.Document;
+import edu.carleton.comp4601.dao.DocumentCollection;
 
 
 @Path("/sda")
@@ -37,13 +39,16 @@ public class SearchableDocumentArchive {
 
 	private static String BASE_URL = "http://localhost:8080/COMP4601-SDA/rest/sda/";
 	public static MongoStore store;
+	public static LuceneFacade lucene;
 	private String name;
+	private HTMLTableFormatter tableFormatter;
 
 	public SearchableDocumentArchive() {
 		
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
-		
 		store = MongoStore.getInstance();
+		lucene = LuceneFacade.getInstance();
+		tableFormatter = new HTMLTableFormatter();
 	}
 
 	@GET
@@ -56,7 +61,6 @@ public class SearchableDocumentArchive {
 	public Response createDocument(@FormParam("id") String id,
 							   @FormParam("name") String name,
 							   @FormParam("content") String content,
-							   @FormParam("url") String url, 
 							   @FormParam("tags") String tags,
 							   @FormParam("links") String links) throws IOException {
 		
@@ -65,8 +69,8 @@ public class SearchableDocumentArchive {
 		doc.setName(name);
 		doc.setContent(content);
 		doc.setUrl(BASE_URL + id);
-		doc.setTags(formTagsToList(tags));
-		doc.setLinks(formLinksToList(links));
+		if (tags.length() > 0) doc.setTags(commaStringToList(tags));
+		if (links.length() > 0) doc.setLinks(commaStringToList(links));
 		doc.setScore(0f);
 		store.add(doc);
 		
@@ -79,21 +83,59 @@ public class SearchableDocumentArchive {
 	public String getDocument(@PathParam("docId") String _id) {
 		int id = new Integer(_id).intValue();
 		Document doc = store.getDocument(id);
-		return documentToHTML(doc);
+		return documentToHTML(doc) + 
+		"<br/><a href=\"" + ("edit/" + doc.getId()) + "\"><button>Edit</button></a>";
 	}
 
 	public String documentToHTML(Document doc) {
 		String HTMLLinks = "";
 		for (String link : doc.getLinks()) {
-			HTMLLinks += "<a href=\"" + link + "\">" + link + "</a>";
+			HTMLLinks += "<a href=\"" + (BASE_URL + link) + "\">" + link + "</a><br/>";
 		}
 		return "<html><head><title>" + doc.getName() + "</title><meta charset=\"UTF-8\">" + 
 		"<meta name=\"description\" content=\"COMP 4601 Assignment 1\">" +
 		"<meta name=\"tags\" content=\"" + String.join(", ", doc.getTags()) + "\">" +
 		"<meta name=\"author\" content=\"Brian Ferch\"></head><body>" + 
 		"<p>" + doc.getContent() + "</p>" +
-		HTMLLinks +
-		"</body></html>";		
+		HTMLLinks + "</body></html>";
+	}
+	
+	@DELETE
+	@Path("{docId}")
+	public Response deleteDocument(@PathParam("docId") String _id) {
+		int id = new Integer(_id).intValue();
+		if (store.deleteOne(id)) return Response.status(200).build();	
+		else return Response.status(204).build();
+	}
+	
+	@GET
+	@Path("/delete/{tags}")
+	public Response deleteTags(@PathParam("tags") String tags) {
+		List<String> tagsList = Arrays.asList(tags.split("\\+"));
+		boolean atLeastOneDeleted = false;
+		for (String tag : tagsList) {
+			if (store.deleteAllWithTag(tag)) {
+				atLeastOneDeleted = true;
+			}
+		}
+		if (atLeastOneDeleted) return Response.status(200).build();
+		else return Response.status(204).build();
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/search/{tags}")
+	public Response searchTags(@PathParam("tags") String tags) {
+		List<String> tagsList = Arrays.asList(tags.split("\\+"));
+		// fill in later
+		return Response.status(200).build();
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/documents")
+	public String getDocuments() {
+		return tableFormatter.html(store.getAll());
 	}
 	
 	@GET
@@ -106,34 +148,76 @@ public class SearchableDocumentArchive {
 		"<form action=\"../" + doc.getId() + "\" method=\"POST\">" + 
 		"<br/><label for=\"tags\">Edit Tags</label><br/>" + 
 		"<input name=\"tags\" type=\"text\" value=\"" + String.join(", ", doc.getTags()) + "\"/>" +
-		"<br/><input type=\"submit\" value=\"Submit\"/>\n" + 
+		"<br/><br/><label for=\"links\">Edit Links</label><br/>" +
+		"<input name=\"links\" type=\"text\" value=\"" + String.join(", ", doc.getLinks())  + "\"/>" +
+		"<br/><br/><input type=\"submit\" value=\"Submit\"/>" + 
 		"</form>";
-		//"<label for=\"links\">Edit Links</label><br/>" +
-		//"<input name=\"links\" type=\"text\" value=\"" +  + "\"/>" +
 	}
 	
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Path("{docId}")
 	public Response updateDocument(@PathParam("docId") String _id,
-								   @FormParam("tags") String tags) throws IOException {
+								   @FormParam("tags") String tags,
+								   @FormParam("links") String links) throws IOException {
 		int id = new Integer(_id).intValue();
 		Document doc = store.getDocument(id);
-		doc.setTags(formTagsToList(tags));
-		//doc.setLinks(formLinksToList(links));
+		doc.setTags(commaStringToList(tags));
+		doc.setLinks(commaStringToList(links));
 		store.update(doc);
 		return Response.status(200).build();
 	}
 	
-	public ArrayList<String> formTagsToList(String tags) {
-		List<String> list = Arrays.asList(tags.split(","));
+	public ArrayList<String> commaStringToList(String string) {
+		List<String> list = Arrays.asList(string.split(","));
 		list.replaceAll(tag -> tag.trim());
 		return new ArrayList<String>(list);
 	}
 	
-	public ArrayList<String> formLinksToList(String links) {
-	    List<String> list = Arrays.asList(links.split(","));
-	    list.replaceAll(linkText -> BASE_URL + linkText.trim());
-		return new ArrayList<String>(list);
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/reset")
+	public String resetIndex() {
+		try {
+	        lucene.index(true, true);
+			return HTMLMessage("Reset success");
+		} catch(IOException e) {
+			return HTMLMessage("Error occured while indexing: " + e.getMessage());
+		}
+	}
+	
+	public String HTMLMessage(String message) {
+		return "<html><head></head><body>" + message + "</body></html>";
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/pagerank")
+	public String getPageRanks() {
+		return tableFormatter.html(store.getAll());
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/boost")
+	public String boost() {
+		try {
+	        lucene.index(false, true);
+			return HTMLMessage("Boost success");
+		} catch(IOException e) {
+			return HTMLMessage("Error occured while boosting: " + e.getMessage());
+		}	
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/noboost")
+	public String noboost() {
+		try {
+	        lucene.index(false, false);
+			return HTMLMessage("No Boost Success");
+		} catch(IOException e) {
+			return HTMLMessage("Error occured while no-boosting: " + e.getMessage());
+		}
 	}
 }
