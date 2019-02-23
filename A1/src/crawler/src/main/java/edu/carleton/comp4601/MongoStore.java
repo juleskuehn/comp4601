@@ -1,55 +1,102 @@
 package edu.carleton.comp4601;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import com.mongodb.*;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import edu.uci.ics.crawler4j.crawler.Page;
-import edu.uci.ics.crawler4j.parser.HtmlParseData;
 
 import org.bson.*;
 import org.bson.types.Binary;
 
 public class MongoStore {
 
-	static String ID = "ID";
-	static String URL = "URL";
-	static String TEXT = "Text";
-	static String TAGS = "Tags";
-	static String LINKS = "Links";
-	static String IMAGES = "Images";
-
 	static MongoStore instance;
 	private MongoClient mongoClient;
 	private MongoDatabase db;
-	private MongoCollection<Document> coll;
+	private MongoCollection<Document> docColl;
 	private MongoCollection<Document> graphColl;
+	
+	public MongoCollection<Document> getDocColl() {
+		return docColl;
+	}
 
 	public MongoStore() {
 		mongoClient = new MongoClient("localhost", 27017);
-		db = mongoClient.getDatabase("first_crawler");
-		coll = db.getCollection("pages");
+		db = mongoClient.getDatabase("sda");
+		docColl = db.getCollection("pages");
 		graphColl = db.getCollection("graph");
 	}
 	
-	public void add(Page page) {
-        HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
-		Document doc = new Document(ID, page.getWebURL().getDocid())
-				.append(URL, page.getWebURL().toString())
-				.append(TEXT, htmlParseData.getText())
-				.append(TAGS, htmlParseData.getMetaTagValue("description"));
-		coll.insertOne(doc);
+	// Core document functions used by Crawler
+	public void add(int thisDocId, String name, String url, String content,
+			ArrayList<String> tags, ArrayList<String> links, String type, Double score) {
+		Document doc = new Document("_id", thisDocId)
+							.append("name", name)
+							.append("url", url)
+							.append("content", content)
+							.append("tags", tags)
+							.append("links", links)
+							.append("crawltime", new Date())
+							.append("type", type)
+							.append("score", score);
+		docColl.replaceOne(Filters.eq("_id", thisDocId), doc, new UpdateOptions().upsert(true));
 	}
 	
-	public void add(CrawlerGraph g) {
+	public Document find(int id) {
+		Document document = docColl.find(Filters.eq("_id", id)).first();
+		return document;
+	}
+	
+	public int getIdByURL(String url) {
+		Document document = docColl.find(Filters.eq("url", url)).first();
+		return Integer.parseInt(document.get("_id").toString());
+	}
+	
+	public void setScore(int id, double newScore) {
+		Document doc = find(id);
+		doc.put("score", newScore);
+		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
+	}
+	
+	public boolean deleteOne(int id) {
+		return docColl.deleteOne(Filters.eq("_id", id)).getDeletedCount() > 0;
+	}
+	
+	public boolean deleteAllWithTag(String tag) {
+		return docColl.deleteMany(Filters.eq("tags", tag)).getDeletedCount() > 0;
+	}
+	
+	public void addLink(int id, String linkUrl) {
+		Document doc = find(id);
+		ArrayList<String> links = (ArrayList<String>) doc.get("links");
+		links.add(linkUrl);
+		doc.put("links", links);
+		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
+	}
+	
+	public void addTag(int id, String tag) {
+		Document doc = find(id);
+		ArrayList<String> tags = (ArrayList<String>) doc.get("tags");
+		tags.add(tag);
+		doc.put("tags", tags);
+		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
+	}
+
+	
+	/////////////////
+	// Graph
+	public void addGraph(CrawlerGraph g) {
 		Document graph;
 		try {
 			graph = new Document("_id", 1).append("Bytestream", Marshaller.serializeObject(g));
 			graphColl.replaceOne(Filters.eq("_id", 1), graph, new UpdateOptions().upsert(true));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
@@ -66,67 +113,14 @@ public class MongoStore {
 		}
 		return null;
 	}
-
-	public void add(Page page, String pageText, String linkText, String imagesText) {
-		Document doc = new Document(ID, page.getWebURL().getDocid())
-				.append(URL, page.getWebURL().toString())
-				.append(TEXT, pageText)
-				.append(LINKS, linkText)
-				.append(IMAGES, imagesText);
-		coll.insertOne(doc);
+	
+	public static void main(String[] args) {
+		// For testing class methods
+		MongoStore store = new MongoStore();
+		
+		String tag = "cool to be number 1";
+		store.addTag(1, tag);
+		store.addTag(2, tag);
 	}
 
-//	private ConcurrentHashMap<Integer, Account> getAccounts() {
-//		FindIterable<Document> cursor = coll.find();
-//		ConcurrentHashMap<Integer, Account> map = new ConcurrentHashMap<Integer, Account>();
-//		MongoCursor<Document> c = cursor.iterator();
-//		while (c.hasNext()) {
-//			Document object = c.next();
-//			if (object.get(ID) != null)
-//				map.put((Integer) object.get(ID), new Account((Integer) object.get(ID), (Integer) object.get(BALANCE),
-//						(String) object.get(DESCRIPTION)));
-//		}
-////		System.out.println(map);
-//		return map;
-//	}
-//
-//	public Map<Integer, Account> getModel() {
-//		return getAccounts();
-//	}
-//
-//	public Account find(int id) {
-//		FindIterable<Document> cursor = coll.find(new BasicDBObject(ID, id));
-//		MongoCursor<Document> c = cursor.iterator();
-//		if (c.hasNext()) {
-//			Document object = c.next();
-//			return new Account((Integer) object.get(ID), (Integer) object.get(BALANCE),
-//					(String) object.get(DESCRIPTION));
-//		} else
-//			return null;
-//	}
-//
-
-//
-//	public long size() {
-//		return coll.count();
-//	}
-//
-//	public static AccountStore getInstance() {
-//		if (instance == null)
-//			instance = new AccountsMongoDB();
-//		return instance;
-//	}
-//
-//	@Override
-//	public boolean close(int id) {
-//		DeleteResult result = coll.deleteOne(new BasicDBObject(ID, id));
-//		return result != null;
-//	}
-//
-//	public void update(Account a) {
-//		Document update = new Document(ID, a.getId()).append(BALANCE, a.getBalance()).append(DESCRIPTION,
-//				a.getDescription());
-//
-//		coll.updateOne(Filters.eq(ID, a.getId().intValue()), new Document("$set", update));
-//	}
 }

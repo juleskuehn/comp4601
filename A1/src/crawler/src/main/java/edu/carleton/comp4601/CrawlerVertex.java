@@ -4,63 +4,38 @@ import java.io.Serializable;
 
 import edu.uci.ics.crawler4j.crawler.Page;
 
+// Based on code shown in class
 public class CrawlerVertex implements Serializable {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
-	// Mirrors structure of document storage in Mongo
-	private long ID;
-	private String URL, text, tags;
 	
-	public CrawlerVertex (long ID, String URL) {
+	// Mirrors structure of document storage in Mongo
+	private int ID;
+	private String URL;
+	
+	public CrawlerVertex(int ID, String URL) {
 		this.ID = ID;
 		this.URL = URL;
 	}
 	
-	public CrawlerVertex (Page page) {
+	public CrawlerVertex(Page page) {
 		this(
-			(long) page.getWebURL().getDocid(),
+			(int) page.getWebURL().getDocid(),
 			page.getWebURL().toString()
 		);
 	}
 
 	@Override
 	public String toString() {
-//		return "CrawlerVertex [ID=" + ID + ", URL=" + URL + ", text=" + text + ", tags=" + tags + "]";
-		return URL;
+		return URL.substring(URL.lastIndexOf("/"));
 	}
 
-	public long getID() {
-		return ID;
-	}
+	public int getID() { return ID; }
 
-	public void setID(long iD) {
-		ID = iD;
-	}
+	public void setID(int iD) { ID = iD; }
 
-	public String getURL() {
-		return URL;
-	}
+	public String getURL() { return URL; }
 
-	public void setURL(String uRL) {
-		URL = uRL;
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
-
-	public String getTags() {
-		return tags;
-	}
-
-	public void setTags(String tags) {
-		this.tags = tags;
-	}
+	public void setURL(String uRL) { URL = uRL; }
 	
 }

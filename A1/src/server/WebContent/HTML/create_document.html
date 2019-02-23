@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Create a new document</title>
+ </head>
+ <style>
+ 	
+</style>
+<body>
+
+  <form action="../rest/sda" method="POST">
+
+  <label for="id">ID</label><br/>
+  <input name="id" type="number"/>
+  
+  <br/><br/>
+
+  <label for="name">Name</label><br/>
+  <input name="name" type="text"/>
+  
+  <br/><br/>
+  
+  <label for ="content">Content</label><br/>
+  <textarea NAME="content" COLS=40 ROWS=4></textarea>
+  
+  <br/><br/>
+  
+  <label for="tags">Tags (comma separated)</label><br/>
+  <input name="tags" type="text"/>
+  
+  <br/><br/>
+  
+  <label for="links">Links (comma separated document id's)</label><br/>
+  <input name="links" type="text"/>
+  
+  <br/><br/>
+  
+  <input type="submit" value="Submit" />
+  </form>
+</body>
+</html>
