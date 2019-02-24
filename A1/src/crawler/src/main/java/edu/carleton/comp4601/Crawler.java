@@ -30,13 +30,13 @@ public class Crawler extends WebCrawler {
     private static CrawlerGraph g;
     
     public void onStart() {
-    	g = new CrawlerGraph("crawlerGraph");
+//    	g = new CrawlerGraph("crawlerGraph");
     	// Create graph if one doesn't exist in DB, otherwise load existing graph
-//    	if (mongoStore.getGraph() == null) {
-//        	g = new CrawlerGraph("crawlerGraph");
-//        } else {
-//        	g = mongoStore.getGraph();
-//        }
+    	if (mongoStore.getGraph() == null) {
+        	g = new CrawlerGraph("crawlerGraph");
+        } else {
+        	g = mongoStore.getGraph();
+        }
     }
     
     @Override

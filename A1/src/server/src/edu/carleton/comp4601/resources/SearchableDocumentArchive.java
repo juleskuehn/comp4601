@@ -48,12 +48,14 @@ public class SearchableDocumentArchive {
 	public static MongoStore store;
 	public static LuceneFacade lucene;
 	private String name;
+	private boolean boostOn;
 
 	public SearchableDocumentArchive() {
 		
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
+		searchManager = SearchServiceManager.getInstance();
 		try {
 			SearchServiceManager.getInstance().start();
 		} catch (URISyntaxException e) {
@@ -179,7 +181,7 @@ public class SearchableDocumentArchive {
 	@Path("/reset")
 	public String resetIndex() {
 		try {
-	        lucene.index(true, true);
+	        lucene.index(true, boostOn);
 			return HTMLMessage("Reset success");
 		} catch(Exception e) {
 			return HTMLMessage("Error occured while indexing: " + e.getMessage());
@@ -292,6 +294,19 @@ public class SearchableDocumentArchive {
 		results.setDocuments(temp);
 		
 		return results;	
+	}
+	
+	@GET
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/list")
+	public String listServices() {
+		ArrayList<String> services = searchManager.list();
+		String output = "<ul>";
+		for (String service : services) {
+			output += "<li>" + service + "</li>";
+		}
+		output += "</ul>";
+		return HTMLMessage(output);
 	}
 	
 }
