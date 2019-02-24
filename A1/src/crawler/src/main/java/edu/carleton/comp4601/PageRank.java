@@ -7,7 +7,7 @@ public class PageRank {
 	// Create transition matrix from adjacency matrix
 	private static Matrix getProbMatrix(Matrix P) {
 		// Alpha: likelihood of web surfer jumping to a random location (URL bar)
-		final double ALPHA = 0.15;
+		final double ALPHA = 0.5;
 		int N = P.getColumnDimension();
 		double[][] Parray = P.transpose().getArray();
 		for (double[] row:Parray) {

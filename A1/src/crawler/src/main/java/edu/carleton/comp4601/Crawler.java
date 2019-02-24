@@ -25,16 +25,13 @@ import edu.uci.ics.crawler4j.url.WebURL;
 
 public class Crawler extends WebCrawler {
 
-	// TODO: Update to allow only the formats specified in Assignment
-//    private static final Pattern ALLOW_EXTENSIONS = Pattern.compile(".*\\.(bmp|gif|jpg|png|tif|jpeg|tiff)$");
-
     // Connection to Mongo
     private static MongoStore mongoStore = new MongoStore();
     private static CrawlerGraph g;
     
     public void onStart() {
     	g = new CrawlerGraph("crawlerGraph");
-//    	// Create graph if one doesn't exist in DB, otherwise load existing graph
+    	// Create graph if one doesn't exist in DB, otherwise load existing graph
 //    	if (mongoStore.getGraph() == null) {
 //        	g = new CrawlerGraph("crawlerGraph");
 //        } else {
@@ -44,8 +41,6 @@ public class Crawler extends WebCrawler {
     
     @Override
     public boolean shouldVisit(Page referringPage, WebURL url) {
-    	// For testing my own page, which only has internal links
-//    	return true;
     	// Assignment requirement 11.1: "prevent off site page visits"
         String href = url.getURL().toLowerCase();
         return href.startsWith("https://sikaman.dyndns.org")
@@ -73,12 +68,12 @@ public class Crawler extends WebCrawler {
     	// Add to graph
     	CrawlerVertex thisV = g.getV().get(thisID);
     	if (thisV == null) {
-    		thisV = new CrawlerVertex(page);    		
+    		thisV = new CrawlerVertex(page);
     		g.addVertex(thisV);
     	}
     	CrawlerVertex parentV = g.getV().get(parentID);
     	if (parentV != null) {
-    		g.addEdge(parentV, thisV);      		
+    		g.addEdge(parentV, thisV);
     	}
     	
     	// Get page properties via crawler4j methods
@@ -91,17 +86,16 @@ public class Crawler extends WebCrawler {
             String pageHtml = ((HtmlParseData) page.getParseData()).getHtml();
             String baseURL = url.substring(0, url.lastIndexOf("/")) + "/";
             Document doc = Jsoup.parse(pageHtml, baseURL);	
-                        
+            
             // Get page content for SDA Document
             String name = doc.title();
             String content = doc.text();
             
             ArrayList<String> tags = new ArrayList<String>();
-            for (Element metaTag : doc.getElementsByTag("meta")) {
-            	tags.add(metaTag.attr("content"));
-            }
-//             Add page title to "tags" to ensure that all documents have at least 1 keyword
-            tags.add(name);
+//            for (Element metaTag : doc.getElementsByTag("meta")) {
+//            	tags.add(metaTag.attr("content"));
+//            }
+//            tags.add(name);
             
             // Get each link's href and text
             Elements linkEls = doc.select("a[href]");
@@ -126,16 +120,16 @@ public class Crawler extends WebCrawler {
             	try {
             		int linkDocId = mongoStore.getIdByURL(link.attr("abs:href"));
             		if (linkDocId == thisDocId) {
-//            			System.out.println("Self link at url " + page.getWebURL().toString());
+            			System.out.println("Self link at url " + page.getWebURL().toString());
             			g.addEdge(thisV, thisV);
             		} else {
-//            		System.out.printf("%d linkDocId Found!!", linkDocId);
+            			System.out.printf("%d linkDocId Found!!", linkDocId);
             			// Add to graph
             			CrawlerVertex linkedV = g.getV().get(linkDocId);
             			g.addEdge(thisV, linkedV);
             		}
             	} catch (Exception e) {
-//            		System.out.printf("%s not found :(", link.attr("abs:href"));
+            		System.out.printf("%s not found :(", link.attr("abs:href"));
             	}
             }
             
@@ -169,8 +163,6 @@ public class Crawler extends WebCrawler {
         }
     }
     
-    // TODO Move this to a more general location
-    // since it needs to be called when index is manually updated
 	public static void scorePages() {
 		Matrix PR = PageRank.computePageRank(g.toAdjMatrix());
 		double[] scores = PR.getArray()[0];
@@ -183,16 +175,16 @@ public class Crawler extends WebCrawler {
     // (Shady) singleton pattern to communicate between threads
     @SuppressWarnings("static-access")
 	public void onBeforeExit() {
-    	// Is this crawler thread the first to finish?
-    	if (CrawlerSharedConfig.getInstance().firstToFinish) {
+    	CrawlerSharedConfig.getInstance().finished++;
+    	// Is this crawler thread the last to finish?
+    	if (CrawlerSharedConfig.getInstance().lastToFinish()) {
     		// (Prevent printing multiple times)
     		System.out.println(g);
     		scorePages();
     		GraphLayoutVisualizer.visualizeGraph(g.getG());
-    		CrawlerSharedConfig.getInstance().firstToFinish = false;
     	}
     	// Save the serialized graph to Mongo
     	mongoStore.addGraph(g);
     }
-    
+
 }
