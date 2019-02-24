@@ -55,7 +55,6 @@ public class SearchableDocumentArchive {
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
-		searchManager = SearchServiceManager.getInstance();
 		try {
 			SearchServiceManager.getInstance().start();
 		} catch (URISyntaxException e) {
@@ -300,7 +299,7 @@ public class SearchableDocumentArchive {
 	@Produces(MediaType.TEXT_HTML)
 	@Path("/list")
 	public String listServices() {
-		ArrayList<String> services = searchManager.list();
+		ArrayList<String> services = SearchServiceManager.getInstance().list();
 		String output = "<ul>";
 		for (String service : services) {
 			output += "<li>" + service + "</li>";
