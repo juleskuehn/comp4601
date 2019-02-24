@@ -24,19 +24,30 @@ import java.io.StringReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -50,20 +61,20 @@ import Jama.Matrix;
 public class LuceneFacade {
 	
 	public static String COMP_4601_BASE = System.getProperty("user.home") + File.separator;
+	public static String INDEX_PATH = COMP_4601_BASE + "lucene_temp/";
 	private MongoStore mongoStore;
 
     public LuceneFacade() {
-    	mongoStore = new MongoStore();
+    	mongoStore = MongoStore.getInstance();
     }
     
     @SuppressWarnings("unused")
 	public void index(boolean create, boolean boost) {
-    	String indexPath = COMP_4601_BASE + "lucene_temp/";
         Date start = new Date();
         try {
-            System.out.println("Indexing to directory '" + indexPath + "'...");
+            System.out.println("Indexing to directory '" + INDEX_PATH + "'...");
 
-            Directory dir = FSDirectory.open(Paths.get(indexPath));
+            Directory dir = FSDirectory.open(Paths.get(INDEX_PATH));
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
@@ -113,17 +124,18 @@ public class LuceneFacade {
 	static void indexDoc(IndexWriter writer, org.bson.Document mongoDoc, boolean boost) throws IOException {
         Document luceneDoc = new Document();
         
-        luceneDoc.add(new StringField("url", mongoDoc.getString("url"), Field.Store.YES));
-        luceneDoc.add(new IntPoint("docId", mongoDoc.getInteger("_id")));
-        luceneDoc.add(new StringField("i", "Jules Kuehn and Brian Ferch",  Field.Store.YES));
-        luceneDoc.add(new LongPoint("date", ((Date) mongoDoc.get("crawltime")).getTime()));
-        luceneDoc.add(new StringField("type", mongoDoc.getString("type"), Field.Store.YES));
+        luceneDoc.add(new StoredField("url", mongoDoc.getString("url")));
+        luceneDoc.add(new TextField("docId", new StringReader(Integer.toString(mongoDoc.getInteger("_id")))));
+        luceneDoc.add(new StoredField("docId", mongoDoc.getInteger("_id")));
+        luceneDoc.add(new TextField("i", new StringReader("Jules Kuehn and Brian Ferch")));
+        luceneDoc.add(new StoredField("i", "Jules Kuehn and Brian Ferch"));
+        luceneDoc.add(new StoredField("date", ((Date) mongoDoc.get("crawltime")).getTime()));
+        luceneDoc.add(new StoredField("type", mongoDoc.getString("type")));
+        luceneDoc.add(new TextField("type", new StringReader(mongoDoc.getString("type"))));
         
         // Add searchable content (body text, title, URL, MIME-type)
         String content = mongoDoc.getString("content") + " ";
         content += mongoDoc.getString("name") + " ";
-        content += mongoDoc.getString("url") + " ";
-        content += mongoDoc.getString("type") + " ";
         TextField tfContent = new TextField("content", new StringReader(content));
         // Apply PageRank score as boost on the content field only
         if (boost)
@@ -154,7 +166,39 @@ public class LuceneFacade {
         }
     }
     
+    public ArrayList<edu.carleton.comp4601.dao.Document> query(String searchString) {
+    	try {
+	    	IndexReader reader = DirectoryReader.open(FSDirectory.open(new File(INDEX_PATH).toPath()));
+	    	IndexSearcher searcher = new IndexSearcher(reader);
+	    	Analyzer analyzer = new StandardAnalyzer();
+	    	QueryParser parser = new QueryParser("content", analyzer);
+	    	Query q = parser.parse(searchString);
+	    	TopDocs results = searcher.search(q, 100); // 100 documents!
+	    	ScoreDoc[] hits = results.scoreDocs;
+	    	ArrayList<edu.carleton.comp4601.dao.Document> resultDocs = getDocs(hits, searcher);
+	    	reader.close();
+	    	return resultDocs;
+    	} catch (IOException | ParseException e) {
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
     
+    public ArrayList<edu.carleton.comp4601.dao.Document> getDocs(ScoreDoc[] hits, IndexSearcher searcher) throws IOException {
+    	ArrayList<edu.carleton.comp4601.dao.Document> docs = new ArrayList<edu.carleton.comp4601.dao.Document>();
+    	for (ScoreDoc hit : hits) {
+    		Document indexDoc = searcher.doc(hit.doc);
+    		String id = indexDoc.get("docId");
+    		if (id != null) {
+    			edu.carleton.comp4601.dao.Document d = mongoStore.getDocument((Integer.valueOf(id)));
+    			if (d != null) {
+		    		d.setScore(hit.score);
+		    		docs.add(d);
+    			}
+    		}
+    	}
+    	return docs;
+    }    
 
     public static void main(String[] args) {
         LuceneFacade myLuceneFacade = new LuceneFacade();

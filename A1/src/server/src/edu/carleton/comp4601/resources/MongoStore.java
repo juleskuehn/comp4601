@@ -1,30 +1,15 @@
 package edu.carleton.comp4601.resources;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.mongodb.*;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.bson.Document;
 
 public class MongoStore {
@@ -46,18 +31,8 @@ public class MongoStore {
 		return docColl;
 	}
 	
-	public void reindex() {
-		try {
-			index(true, true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	public void add(Document doc) {
 		docColl.replaceOne(Filters.eq("_id", doc.getInteger("_id")), doc, new UpdateOptions().upsert(true));
-		reindex();
 	}
 	
 	public void add(int thisDocId, String name, String url, String content,
@@ -93,7 +68,6 @@ public class MongoStore {
 	public void update(edu.carleton.comp4601.dao.Document sdaDocument) {
 		Document update = toMongoDocument(sdaDocument);
 		docColl.updateOne(Filters.eq("_id", sdaDocument.getId().intValue()), new Document("$set", update));
-		reindex();
 	}
 	
 	// This nastiness is because the SDA Document class takes a Float (not a Double) for score
@@ -137,8 +111,8 @@ public class MongoStore {
 		return docColl.deleteOne(Filters.eq("_id", id)).getDeletedCount() > 0;
 	}
 	
-	public boolean deleteAllWithTag(String tag) {
-		return docColl.deleteMany(Filters.eq("tags", tag)).getDeletedCount() > 0;
+	public boolean deleteAllWithTags(List<String> tags) {
+		return docColl.deleteMany(Filters.all("tags", tags)).getDeletedCount() > 0;
 	}
 	
 	public edu.carleton.comp4601.dao.DocumentCollection getByTag(String tag) {
@@ -176,100 +150,6 @@ public class MongoStore {
 		doc.put("tags", tags);
 		docColl.replaceOne(Filters.eq("_id", id), doc, new UpdateOptions().upsert(true));
 	}
-	
-    @SuppressWarnings("unused")
-	public void index(boolean create, boolean boost) throws IOException {
-    	String indexPath = COMP_4601_BASE + "lucene_temp/";
-        Date start = new Date();
-        
-        System.out.println("Indexing to directory '" + indexPath + "'...");
-
-        Directory dir = FSDirectory.open(Paths.get(indexPath));
-        Analyzer analyzer = new StandardAnalyzer();
-        IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
-
-        if (create) {
-            // Create a new index in the directory, removing any
-            // previously indexed documents:
-            iwc.setOpenMode(OpenMode.CREATE);
-        } else {
-            // Add new documents to an existing index:
-            iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
-        }
-        
-        IndexWriter writer = new IndexWriter(dir, iwc);
-        indexDocs(writer, docColl, boost);
-        writer.close();
-
-        Date end = new Date();
-        System.out.println(end.getTime() - start.getTime() + " total milliseconds");
-    }
-    
-
-    /**
-     * Indexes all the documents in a MongoCollection into Lucene
-     * @param writer Writer to the index where the given file/dir info will be
-     *               stored
-     * @param docColl MongoCollection to index
-     * @throws IOException If there is a low-level I/O error
-     */
-    static void indexDocs(final IndexWriter writer, MongoCollection<Document> docColl, boolean boost) throws IOException {
-    	FindIterable<Document> docs = docColl.find();
-		MongoCursor<Document> cursor = docs.iterator();
-        try {
-            while(cursor.hasNext()) {               
-            	indexDoc(writer, cursor.next(), boost);
-            }
-        } finally {
-            cursor.close();
-        }
-    }
-
-    /** Indexes a single document */
-    @SuppressWarnings("deprecation")
-	static void indexDoc(IndexWriter writer, Document mongoDoc, boolean boost) throws IOException {
-    	org.apache.lucene.document.Document luceneDoc = new org.apache.lucene.document.Document();
-        
-        luceneDoc.add(new StringField("url", mongoDoc.getString("url"), Field.Store.YES));
-        luceneDoc.add(new IntPoint("docId", mongoDoc.getInteger("_id")));
-        luceneDoc.add(new StringField("i", "Jules Kuehn and Brian Ferch",  Field.Store.YES));
-        luceneDoc.add(new LongPoint("date", ((Date) mongoDoc.get("crawltime")).getTime()));
-        luceneDoc.add(new StringField("type", mongoDoc.getString("type"), Field.Store.YES));
-        
-        // Add searchable content (body text, title, URL, MIME-type)
-        String content = mongoDoc.getString("content") + " ";
-        content += mongoDoc.getString("name") + " ";
-        content += mongoDoc.getString("url") + " ";
-        content += mongoDoc.getString("type") + " ";
-        TextField tfContent = new TextField("content", new StringReader(content));
-        // Apply PageRank score as boost on the content field only
-        if (boost)
-        	tfContent.setBoost(mongoDoc.getDouble("score").floatValue());
-        luceneDoc.add(tfContent);
-        
-        // Add searchable tags
-        String tags = "";
-        ArrayList<String> tagsList = (ArrayList<String>) mongoDoc.get("tags");
-        for (String tag : tagsList) {
-        	tags += tag + " ";
-        }
-        TextField tfTags = new TextField("tags", new StringReader(tags));
-        // Default
-        tfContent.setBoost(2);
-        luceneDoc.add(tfTags);
-
-
-        if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
-            // New index, so we just add the document (no old document can be there):
-            System.out.println("adding " + mongoDoc.getString("name"));
-            writer.addDocument(luceneDoc);
-        } else {
-            // Existing index (an old copy of this document may have been indexed) so
-            // we use updateDocument instead to replace the old one matching docId
-            System.out.println("updating " + mongoDoc.getString("name"));
-            writer.updateDocument(new Term("docId"), luceneDoc);
-        }
-    }
 	
 	public static MongoStore getInstance() {
 		if (instance == null)
