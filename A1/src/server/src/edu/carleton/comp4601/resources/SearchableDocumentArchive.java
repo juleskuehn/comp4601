@@ -41,14 +41,12 @@ public class SearchableDocumentArchive {
 	public static MongoStore store;
 	public static LuceneFacade lucene;
 	private String name;
-	private HTMLTableFormatter tableFormatter;
 
 	public SearchableDocumentArchive() {
 		
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
-		tableFormatter = new HTMLTableFormatter();
 	}
 
 	@GET
@@ -73,7 +71,7 @@ public class SearchableDocumentArchive {
 		if (links.length() > 0) doc.setLinks(commaStringToList(links));
 		doc.setScore(0f);
 		store.add(doc);
-		
+		lucene.index(true, true);
 		return Response.status(200).build();
 	}
 	
@@ -90,7 +88,7 @@ public class SearchableDocumentArchive {
 	public String documentToHTML(Document doc) {
 		String HTMLLinks = "";
 		for (String link : doc.getLinks()) {
-			HTMLLinks += "<a href=\"" + (BASE_URL + link) + "\">" + link + "</a><br/>";
+			HTMLLinks += "<a href=\"" + link + "\">" + link + "</a><br/>";
 		}
 		return "<html><head><title>" + doc.getName() + "</title><meta charset=\"UTF-8\">" + 
 		"<meta name=\"description\" content=\"COMP 4601 Assignment 1\">" +
@@ -104,22 +102,16 @@ public class SearchableDocumentArchive {
 	@Path("{docId}")
 	public Response deleteDocument(@PathParam("docId") String _id) {
 		int id = new Integer(_id).intValue();
-		if (store.deleteOne(id)) return Response.status(200).build();	
-		else return Response.status(204).build();
+		int status = store.deleteOne(id) ? 200 : 204;
+		return Response.status(status).build();
 	}
 	
 	@GET
 	@Path("/delete/{tags}")
 	public Response deleteTags(@PathParam("tags") String tags) {
 		List<String> tagsList = Arrays.asList(tags.split("\\+"));
-		boolean atLeastOneDeleted = false;
-		for (String tag : tagsList) {
-			if (store.deleteAllWithTag(tag)) {
-				atLeastOneDeleted = true;
-			}
-		}
-		if (atLeastOneDeleted) return Response.status(200).build();
-		else return Response.status(204).build();
+		int status = store.deleteAllWithTags(tagsList) ? 200 : 204;
+		return Response.status(status).build();
 	}
 	
 	@GET
@@ -135,6 +127,8 @@ public class SearchableDocumentArchive {
 	@Produces(MediaType.TEXT_HTML)
 	@Path("/documents")
 	public String getDocuments() {
+		HTMLTableFormatter tableFormatter = new HTMLTableFormatter();
+		tableFormatter.singleColumn();
 		return tableFormatter.html(store.getAll());
 	}
 	
@@ -165,6 +159,7 @@ public class SearchableDocumentArchive {
 		doc.setTags(commaStringToList(tags));
 		doc.setLinks(commaStringToList(links));
 		store.update(doc);
+		lucene.index(true, true);
 		return Response.status(200).build();
 	}
 	
@@ -194,6 +189,8 @@ public class SearchableDocumentArchive {
 	@Produces(MediaType.TEXT_HTML)
 	@Path("/pagerank")
 	public String getPageRanks() {
+		HTMLTableFormatter tableFormatter = new HTMLTableFormatter();
+		tableFormatter.setColl2Title("PAGERANK");
 		return tableFormatter.html(store.getAll());
 	}
 	
@@ -202,7 +199,7 @@ public class SearchableDocumentArchive {
 	@Path("/boost")
 	public String boost() {
 		try {
-	        lucene.index(false, true);
+	        lucene.index(true, true);
 			return HTMLMessage("Boost success");
 		} catch(Exception e) {
 			return HTMLMessage("Error occured while boosting: " + e.getMessage());
@@ -214,10 +211,45 @@ public class SearchableDocumentArchive {
 	@Path("/noboost")
 	public String noboost() {
 		try {
-	        lucene.index(false, false);
+	        lucene.index(true, false);
 			return HTMLMessage("No Boost Success");
 		} catch(Exception e) {
 			return HTMLMessage("Error occured while no-boosting: " + e.getMessage());
 		}
 	}
+	
+	@GET
+	@Path("query/{terms}")
+	@Produces(MediaType.APPLICATION_XML)
+	public DocumentCollection queryAsXML(@PathParam("terms") String terms) {
+		DocumentCollection dc = new DocumentCollection();
+		dc.setDocuments(lucene.query(terms));
+		return dc;
+	}
+	
+	@GET
+	@Path("query/{terms}")
+	@Produces(MediaType.TEXT_HTML)
+	public String queryAsHTML(@PathParam("terms") String terms) {
+		HTMLTableFormatter tableFormatter = new HTMLTableFormatter();
+		DocumentCollection results = query(terms);
+		return results.getDocuments().size() > 0 ? tableFormatter.html(results) : "No documents found.";
+	}
+	
+	public DocumentCollection query(String terms) {
+  		String[] termsList = terms.split("\\+");
+		for (int i = 0; i < termsList.length; i++) {
+			if (termsList[i].contains(":")) {
+				termsList[i] = termsList[i].replace(":", ":(");
+				termsList[i] += ")";
+			}
+		}
+		String query = String.join("+", termsList);
+		
+		DocumentCollection dc = new DocumentCollection();
+		List<Document> docs = lucene.query(query);
+		dc.setDocuments(docs != null ? docs : new ArrayList<Document>());
+		return dc;
+	}
+	
 }

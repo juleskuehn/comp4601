@@ -17,12 +17,16 @@ public class HTMLTableFormatter {
 	String headFormat;
 	String bodyFormat;
 	String footFormat;
+	String coll2Title;
+	boolean singleColumn;
 	
 	public HTMLTableFormatter(String headFormat, String bodyFormat, String footFormat) {
 		this.headFormat = headFormat;
 		this.bodyFormat = bodyFormat;
 		this.footFormat = footFormat;
 		this.buff = new StringBuffer();
+		this.singleColumn = false;
+		this.coll2Title = "SCORE";
 	}
 	
 	public HTMLTableFormatter() {
@@ -43,7 +47,8 @@ public class HTMLTableFormatter {
 	
 	public String html(List<Document> docs) {
 		buff.append(head(style));
-		buff.append(body("<th>#</th><th>DOCUMENT</th><th>SCORE</th>"));
+		buff.append(body("<th>#</th><th>DOCUMENT</th>"));
+		if (!singleColumn) buff.append("<th>" + coll2Title + "</th>");
 		for (Document d : docs) {
 			document(d);
 		}
@@ -67,10 +72,20 @@ public class HTMLTableFormatter {
 		buff.append(d.getName());
 		buff.append("</a>");
 		buff.append("</td>");
-		buff.append("<td>");
-		buff.append(d.getScore());
-		buff.append("</td>");
+		if (!singleColumn) {
+			buff.append("<td>");
+			buff.append(d.getScore());
+			buff.append("</td>");
+		}
 		buff.append("</tr>");
+	}
+
+	public void singleColumn() {
+		this.singleColumn = true;
+	}
+
+	public void setColl2Title(String title) {
+		this.coll2Title = title;
 	}
 
 	public String getHeadFormat() {
