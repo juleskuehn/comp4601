@@ -261,7 +261,7 @@ public class SearchableDocumentArchive {
 	@GET
 	@Path("search/{terms}")
 	@Produces(MediaType.APPLICATION_XML)
-	public DocumentCollection searchAsXML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException {
+	public DocumentCollection searchAsXML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException, URISyntaxException {
 		DocumentCollection results = search(terms);
 		return results;
 	}
@@ -269,15 +269,16 @@ public class SearchableDocumentArchive {
 	@GET
 	@Path("search/{terms}")
 	@Produces(MediaType.TEXT_HTML)
-	public String searchAsHTML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException {
+	public String searchAsHTML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException, URISyntaxException {
 		DocumentCollection results = search(terms);
 		HTMLTableFormatter tableFormatter = new HTMLTableFormatter();
 		return results.getDocuments().size() > 0 ? tableFormatter.html(results) : "No documents found.";
 	}
 	
-	public DocumentCollection search(String terms) throws IOException, EncodeException, SearchException {
+	public DocumentCollection search(String terms) throws IOException, EncodeException, SearchException, URISyntaxException {
 		SearchResult sr;
 		DocumentCollection results;
+		SearchServiceManager.getInstance().start();
 		sr = SearchServiceManager.getInstance().search(terms);
 		results = query(terms);
 		try {
