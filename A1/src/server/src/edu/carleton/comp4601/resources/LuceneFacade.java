@@ -204,10 +204,6 @@ public class LuceneFacade {
         LuceneFacade myLuceneFacade = new LuceneFacade();
         // Create new index with boost. Arguments are (forceCreateIndex, applyBoost)
         myLuceneFacade.index(true, true);
-        // TODO attempts to Update (rather than delete and create)
-        // the index are resulting in duplicate entries
-        myLuceneFacade.index(true, true);
-        // To re-index with boost, call as "myLuceneFacade.index(false, true);"
     }
    
 }
