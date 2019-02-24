@@ -125,7 +125,6 @@ public class LuceneFacade {
         Document luceneDoc = new Document();
         
         luceneDoc.add(new StoredField("url", mongoDoc.getString("url")));
-        luceneDoc.add(new TextField("docId", new StringReader(Integer.toString(mongoDoc.getInteger("_id")))));
         luceneDoc.add(new StoredField("docId", mongoDoc.getInteger("_id")));
         luceneDoc.add(new TextField("i", new StringReader("Jules Kuehn and Brian Ferch")));
         luceneDoc.add(new StoredField("i", "Jules Kuehn and Brian Ferch"));
@@ -137,9 +136,12 @@ public class LuceneFacade {
         String content = mongoDoc.getString("content") + " ";
         content += mongoDoc.getString("name") + " ";
         TextField tfContent = new TextField("content", new StringReader(content));
-        // Apply PageRank score as boost on the content field only
-        if (boost)
+        // Apply PageRank score as boost on each field
+        if (boost) {
         	tfContent.setBoost(mongoDoc.getDouble("score").floatValue());
+        } else {
+        	tfContent.setBoost(1);
+        }
         luceneDoc.add(tfContent);
         
         // Add searchable tags
@@ -150,7 +152,6 @@ public class LuceneFacade {
         }
         TextField tfTags = new TextField("tags", new StringReader(tags));
         // Default
-        tfContent.setBoost(2);
         luceneDoc.add(tfTags);
 
 

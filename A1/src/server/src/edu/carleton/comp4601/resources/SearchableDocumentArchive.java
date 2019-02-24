@@ -1,6 +1,7 @@
 package edu.carleton.comp4601.resources;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +27,7 @@ import edu.carleton.comp4601.resources.MongoStore;
 import edu.carleton.comp4601.utility.HTMLTableFormatter;
 import edu.carleton.comp4601.dao.Document;
 import edu.carleton.comp4601.dao.DocumentCollection;
+import edu.carleton.comp4601.utility.SearchServiceManager;
 
 
 @Path("/sda")
@@ -40,6 +42,7 @@ public class SearchableDocumentArchive {
 	private static String BASE_URL = "http://localhost:8080/COMP4601-SDA/rest/sda/";
 	public static MongoStore store;
 	public static LuceneFacade lucene;
+	public static SearchServiceManager searchManager;
 	private String name;
 
 	public SearchableDocumentArchive() {
@@ -47,6 +50,13 @@ public class SearchableDocumentArchive {
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
+		lucene.index(true, true);
+		searchManager = SearchServiceManager.getInstance();
+		try {
+			searchManager.start();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@GET
@@ -103,6 +113,7 @@ public class SearchableDocumentArchive {
 	public Response deleteDocument(@PathParam("docId") String _id) {
 		int id = new Integer(_id).intValue();
 		int status = store.deleteOne(id) ? 200 : 204;
+		lucene.index(true, true);
 		return Response.status(status).build();
 	}
 	
@@ -111,6 +122,7 @@ public class SearchableDocumentArchive {
 	public Response deleteTags(@PathParam("tags") String tags) {
 		List<String> tagsList = Arrays.asList(tags.split("\\+"));
 		int status = store.deleteAllWithTags(tagsList) ? 200 : 204;
+		lucene.index(true, true);
 		return Response.status(status).build();
 	}
 	
@@ -222,9 +234,10 @@ public class SearchableDocumentArchive {
 	@Path("query/{terms}")
 	@Produces(MediaType.APPLICATION_XML)
 	public DocumentCollection queryAsXML(@PathParam("terms") String terms) {
-		DocumentCollection dc = new DocumentCollection();
-		dc.setDocuments(lucene.query(terms));
-		return dc;
+		DocumentCollection results = query(terms);
+		results.setDocuments(lucene.query(terms));
+		//return results.getDocuments().size() > 0 ? results : "No documents found.";
+		return results;
 	}
 	
 	@GET
@@ -249,6 +262,16 @@ public class SearchableDocumentArchive {
 		DocumentCollection dc = new DocumentCollection();
 		List<Document> docs = lucene.query(query);
 		dc.setDocuments(docs != null ? docs : new ArrayList<Document>());
+		return dc;
+	}
+	
+	@GET
+	@Path("search/{terms}")
+	@Produces(MediaType.APPLICATION_XML)
+	public DocumentCollection searchAsXML(@PathParam("terms") String terms) {
+		DocumentCollection dc = new DocumentCollection();
+		//searchManager.search(terms);
+		dc.setDocuments(lucene.query(terms));
 		return dc;
 	}
 	
