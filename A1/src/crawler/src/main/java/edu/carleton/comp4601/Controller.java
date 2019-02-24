@@ -16,6 +16,7 @@ public class Controller {
 
         String crawlStorageFolder = COMP_4601_BASE + "crawler_temp/";
         int numberOfCrawlers = 1;
+        CrawlerSharedConfig.getInstance().numCrawlers = numberOfCrawlers;
 
         CrawlConfig config = new CrawlConfig();
         config.setCrawlStorageFolder(crawlStorageFolder);

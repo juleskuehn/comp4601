@@ -34,7 +34,7 @@ public class Crawler extends WebCrawler {
     
     public void onStart() {
     	g = new CrawlerGraph("crawlerGraph");
-//    	// Create graph if one doesn't exist in DB, otherwise load existing graph
+    	// Create graph if one doesn't exist in DB, otherwise load existing graph
 //    	if (mongoStore.getGraph() == null) {
 //        	g = new CrawlerGraph("crawlerGraph");
 //        } else {
@@ -183,13 +183,13 @@ public class Crawler extends WebCrawler {
     // (Shady) singleton pattern to communicate between threads
     @SuppressWarnings("static-access")
 	public void onBeforeExit() {
-    	// Is this crawler thread the first to finish?
-    	if (CrawlerSharedConfig.getInstance().firstToFinish) {
+    	CrawlerSharedConfig.getInstance().finished++;
+    	// Is this crawler thread the last to finish?
+    	if (CrawlerSharedConfig.getInstance().lastToFinish()) {
     		// (Prevent printing multiple times)
     		System.out.println(g);
     		scorePages();
     		GraphLayoutVisualizer.visualizeGraph(g.getG());
-    		CrawlerSharedConfig.getInstance().firstToFinish = false;
     	}
     	// Save the serialized graph to Mongo
     	mongoStore.addGraph(g);
