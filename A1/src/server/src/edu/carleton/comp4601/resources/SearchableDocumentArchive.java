@@ -5,8 +5,10 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.*;
+import javax.websocket.EncodeException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -25,6 +27,9 @@ import javax.xml.bind.JAXBElement;
 
 import edu.carleton.comp4601.resources.MongoStore;
 import edu.carleton.comp4601.utility.HTMLTableFormatter;
+import edu.carleton.comp4601.utility.SDAConstants;
+import edu.carleton.comp4601.utility.SearchException;
+import edu.carleton.comp4601.utility.SearchResult;
 import edu.carleton.comp4601.dao.Document;
 import edu.carleton.comp4601.dao.DocumentCollection;
 import edu.carleton.comp4601.utility.SearchServiceManager;
@@ -42,7 +47,6 @@ public class SearchableDocumentArchive {
 	private static String BASE_URL = "http://localhost:8080/COMP4601-SDA/rest/sda/";
 	public static MongoStore store;
 	public static LuceneFacade lucene;
-	public static SearchServiceManager searchManager;
 	private String name;
 
 	public SearchableDocumentArchive() {
@@ -50,10 +54,8 @@ public class SearchableDocumentArchive {
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
-		lucene.index(true, true);
-		searchManager = SearchServiceManager.getInstance();
 		try {
-			searchManager.start();
+			SearchServiceManager.getInstance().start();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
@@ -124,15 +126,6 @@ public class SearchableDocumentArchive {
 		int status = store.deleteAllWithTags(tagsList) ? 200 : 204;
 		lucene.index(true, true);
 		return Response.status(status).build();
-	}
-	
-	@GET
-	@Produces(MediaType.TEXT_HTML)
-	@Path("/search/{tags}")
-	public Response searchTags(@PathParam("tags") String tags) {
-		List<String> tagsList = Arrays.asList(tags.split("\\+"));
-		// fill in later
-		return Response.status(200).build();
 	}
 	
 	@GET
@@ -235,7 +228,6 @@ public class SearchableDocumentArchive {
 	@Produces(MediaType.APPLICATION_XML)
 	public DocumentCollection queryAsXML(@PathParam("terms") String terms) {
 		DocumentCollection results = query(terms);
-		results.setDocuments(lucene.query(terms));
 		//return results.getDocuments().size() > 0 ? results : "No documents found.";
 		return results;
 	}
@@ -268,11 +260,38 @@ public class SearchableDocumentArchive {
 	@GET
 	@Path("search/{terms}")
 	@Produces(MediaType.APPLICATION_XML)
-	public DocumentCollection searchAsXML(@PathParam("terms") String terms) {
-		DocumentCollection dc = new DocumentCollection();
-		//searchManager.search(terms);
-		dc.setDocuments(lucene.query(terms));
-		return dc;
+	public DocumentCollection searchAsXML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException {
+		DocumentCollection results = search(terms);
+		return results;
+	}
+	
+	@GET
+	@Path("search/{terms}")
+	@Produces(MediaType.TEXT_HTML)
+	public String searchAsHTML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException {
+		DocumentCollection results = search(terms);
+		HTMLTableFormatter tableFormatter = new HTMLTableFormatter();
+		return results.getDocuments().size() > 0 ? tableFormatter.html(results) : "No documents found.";
+	}
+	
+	public DocumentCollection search(String terms) throws IOException, EncodeException, SearchException {
+		SearchResult sr;
+		DocumentCollection results;
+		sr = SearchServiceManager.getInstance().search(terms);
+		results = query(terms);
+		try {
+			sr.await(SDAConstants.TIMEOUT, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		} finally {
+			SearchServiceManager.getInstance().reset();
+		}
+		
+		// Join local and distributed results
+		List<Document> temp = results.getDocuments();
+		temp.addAll(sr.getDocs());
+		results.setDocuments(temp);
+		
+		return results;	
 	}
 	
 }

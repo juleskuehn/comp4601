@@ -152,8 +152,11 @@ public class MongoStore {
 	}
 	
 	public static MongoStore getInstance() {
-		if (instance == null)
+		if (instance == null) {
 			instance = new MongoStore();
+			System.out.println("NEW");
+		}
+			
 		return instance;
 	}
 }
