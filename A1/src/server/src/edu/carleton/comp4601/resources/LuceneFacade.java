@@ -124,25 +124,18 @@ public class LuceneFacade {
 	static void indexDoc(IndexWriter writer, org.bson.Document mongoDoc, boolean boost) throws IOException {
         Document luceneDoc = new Document();
         
-        luceneDoc.add(new StoredField("url", mongoDoc.getString("url")));
-        luceneDoc.add(new StoredField("docId", mongoDoc.getInteger("_id")));
-        luceneDoc.add(new TextField("i", new StringReader("Jules Kuehn and Brian Ferch")));
-        luceneDoc.add(new StoredField("i", "Jules Kuehn and Brian Ferch"));
-        luceneDoc.add(new StoredField("date", ((Date) mongoDoc.get("crawltime")).getTime()));
-        luceneDoc.add(new StoredField("type", mongoDoc.getString("type")));
-        luceneDoc.add(new TextField("type", new StringReader(mongoDoc.getString("type"))));
+        StoredField tfUrl = new StoredField("url", mongoDoc.getString("url"));
+        StoredField tfDocId = new StoredField("docId", mongoDoc.getInteger("_id"));
+        TextField tfI1 = new TextField("i", new StringReader("Jules Kuehn and Brian Ferch"));
+        StoredField tfI2 = new StoredField("i", "Jules Kuehn and Brian Ferch");
+        StoredField tfDate = new StoredField("date", ((Date) mongoDoc.get("crawltime")).getTime());
+        StoredField tfType1 = new StoredField("type", mongoDoc.getString("type"));
+        TextField tfType2 = new TextField("type", new StringReader(mongoDoc.getString("type")));
         
         // Add searchable content (body text, title, URL, MIME-type)
         String content = mongoDoc.getString("content") + " ";
         content += mongoDoc.getString("name") + " ";
         TextField tfContent = new TextField("content", new StringReader(content));
-        // Apply PageRank score as boost on each field
-        if (boost) {
-        	tfContent.setBoost(mongoDoc.getDouble("score").floatValue());
-        } else {
-        	tfContent.setBoost(1);
-        }
-        luceneDoc.add(tfContent);
         
         // Add searchable tags
         String tags = "";
@@ -151,7 +144,31 @@ public class LuceneFacade {
         	tags += tag + " ";
         }
         TextField tfTags = new TextField("tags", new StringReader(tags));
-        // Default
+        
+        // Boost the tags field. This will only affect user created documents
+        tfTags.setBoost(2);
+        
+        // Apply PageRank score as boost on each field except tags
+        // This will result in extremely low scores for all ranked pages
+        if (boost) {
+        	float pageRank = mongoDoc.getDouble("score").floatValue();
+        	tfContent.setBoost(pageRank);
+        	tfI1.setBoost(pageRank);
+        	tfType2.setBoost(pageRank);
+        } else {
+        	tfContent.setBoost(1);
+        	tfI1.setBoost(1);
+        	tfType2.setBoost(1);
+        }
+        
+        luceneDoc.add(tfContent);
+        luceneDoc.add(tfUrl);
+        luceneDoc.add(tfDocId);
+        luceneDoc.add(tfI1);
+        luceneDoc.add(tfI2);
+        luceneDoc.add(tfDate);
+        luceneDoc.add(tfType1);
+        luceneDoc.add(tfType2);
         luceneDoc.add(tfTags);
 
 
