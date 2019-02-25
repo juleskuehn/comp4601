@@ -34,6 +34,7 @@ import edu.carleton.comp4601.utility.HTMLTableFormatter;
 import edu.carleton.comp4601.utility.SDAConstants;
 import edu.carleton.comp4601.utility.SearchException;
 import edu.carleton.comp4601.utility.SearchResult;
+import edu.carleton.comp4601.Controller;
 import edu.carleton.comp4601.dao.Document;
 import edu.carleton.comp4601.dao.DocumentCollection;
 import edu.carleton.comp4601.utility.SearchServiceManager;
@@ -294,6 +295,23 @@ public class SearchableDocumentArchive {
 			return HTMLMessage("No Boost Success");
 		} catch(Exception e) {
 			return HTMLMessage("Error occured while no-boosting: " + e.getMessage());
+		}
+	}
+	
+	@GET
+	@Path("/crawl/{n}")
+	@Produces(MediaType.TEXT_HTML)
+	public String crawl(@PathParam("n") String n) {
+		String[] urls = {
+	        	"http://lol.jules.lol/parsertest/",
+	        	"https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/resources/N-0.html",
+	        	"https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/handouts/"
+	        };
+		try {
+	        Controller.crawl(urls, Integer.valueOf(n));
+			return HTMLMessage("Crawl success.");
+		} catch(Exception e) {
+			return HTMLMessage("Error occured while crawling: " + e.getMessage());
 		}
 	}
 	
