@@ -62,7 +62,9 @@ public class MongoStore {
 	
 	public edu.carleton.comp4601.dao.Document getDocument(int id) {
 		Document mongoDocument = find(id);
-		return toSdaDocument(mongoDocument);
+		if (mongoDocument != null) {
+			return toSdaDocument(mongoDocument);	
+		} else return null;	
 	}
 	
 	public void update(edu.carleton.comp4601.dao.Document sdaDocument) {

@@ -24,6 +24,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import edu.carleton.comp4601.resources.MongoStore;
 import edu.carleton.comp4601.utility.HTMLTableFormatter;
@@ -55,11 +56,11 @@ public class SearchableDocumentArchive {
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
-		try {
-			SearchServiceManager.getInstance().start();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			//SearchServiceManager.getInstance().start();
+//		} catch (URISyntaxException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	@GET
@@ -67,35 +68,90 @@ public class SearchableDocumentArchive {
 		return name;
 	}
 	
+	@XmlRootElement
+	public class XMLMessage {
+		private String message;
+		
+		public XMLMessage(String message) {
+			this.message = message;
+		}
+
+		public String getError() {
+			return message;
+		}
+
+		public void setError(String message) {
+			this.message = message;
+		}
+	}
+	
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response createDocument(@FormParam("id") String id,
+	@Produces(MediaType.APPLICATION_XML)
+	public XMLMessage createDocumentXML(@FormParam("id") String id,
 							   @FormParam("name") String name,
 							   @FormParam("content") String content,
 							   @FormParam("tags") String tags,
-							   @FormParam("links") String links) throws IOException {
+							   @FormParam("links") String links) {
 		
+		String message = createDocument(id, name, content, tags, links);
+		XMLMessage xmlmessage = new XMLMessage(message);
+		return xmlmessage;
+	}
+	
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.TEXT_HTML)
+	public String createDocumentHTML(@FormParam("id") String id,
+							   @FormParam("name") String name,
+							   @FormParam("content") String content,
+							   @FormParam("tags") String tags,
+							   @FormParam("links") String links) {
+		
+		String message = createDocument(id, name, content, tags, links);
+		return HTMLMessage(message);
+	}
+	
+	public String createDocument(String id, String name, String content, String tags, String links) {
 		Document doc = new Document();
+		if (tags.length() > 0) doc.setTags(commaStringToList(tags));
+		else return "ERROR: Must provide at least 1 tag";
 		doc.setId(new Integer(id).intValue());
 		doc.setName(name);
 		doc.setContent(content);
 		doc.setUrl(BASE_URL + id);
-		if (tags.length() > 0) doc.setTags(commaStringToList(tags));
 		if (links.length() > 0) doc.setLinks(commaStringToList(links));
 		doc.setScore(0f);
 		store.add(doc);
 		lucene.index(true, true);
-		return Response.status(200).build();
+		return "Created document with id: " + doc.getId();
+	}
+	
+	@GET
+	@Produces(MediaType.APPLICATION_XML)
+	@Path("{docId}")
+	public Document getDocumentXML(@PathParam("docId") String _id) {
+		Document doc = getDocument(_id);
+		if (doc != null) return doc;
+		else return getErrorDoc("ERROR: Document not found");
 	}
 	
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	@Path("{docId}")
-	public String getDocument(@PathParam("docId") String _id) {
+	public String getDocumentHTML(@PathParam("docId") String _id) {
+		Document doc = getDocument(_id);
+		if (doc != null) {
+			return documentToHTML(doc) + 
+					"<br/><a href=\"" + ("edit/" + doc.getId()) + "\"><button>Edit</button></a>";			
+		} else {
+			return HTMLMessage("ERROR: Document not found");
+		}
+	}
+	
+	public Document getDocument(String _id) {
 		int id = new Integer(_id).intValue();
-		Document doc = store.getDocument(id);
-		return documentToHTML(doc) + 
-		"<br/><a href=\"" + ("edit/" + doc.getId()) + "\"><button>Edit</button></a>";
+		return store.getDocument(id);
 	}
 
 	public String documentToHTML(Document doc) {
@@ -132,10 +188,17 @@ public class SearchableDocumentArchive {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	@Path("/documents")
-	public String getDocuments() {
+	public String getDocumentsHTML() {
 		HTMLTableFormatter tableFormatter = new HTMLTableFormatter();
 		tableFormatter.singleColumn();
 		return tableFormatter.html(store.getAll());
+	}
+	
+	@GET
+	@Produces(MediaType.APPLICATION_XML)
+	@Path("/documents")
+	public DocumentCollection getDocumentsXML() {
+		return store.getAll();
 	}
 	
 	@GET
@@ -229,8 +292,22 @@ public class SearchableDocumentArchive {
 	@Produces(MediaType.APPLICATION_XML)
 	public DocumentCollection queryAsXML(@PathParam("terms") String terms) {
 		DocumentCollection results = query(terms);
-		//return results.getDocuments().size() > 0 ? results : "No documents found.";
-		return results;
+		return results.getDocuments().size() > 0 ? results : getErrorDocColl("No documents found.");
+	}
+	
+	public DocumentCollection getErrorDocColl(String message) {
+		DocumentCollection errorColl = new DocumentCollection();
+		ArrayList<Document> docs = new ArrayList<Document>();
+		docs.add(getErrorDoc(message));
+		errorColl.setDocuments(docs);
+		return errorColl;
+	}
+	
+	public Document getErrorDoc(String message) {
+		Document errorDoc = new Document();
+		errorDoc.setName("ERROR");
+		errorDoc.setContent(message);
+		return errorDoc;
 	}
 	
 	@GET
@@ -263,7 +340,7 @@ public class SearchableDocumentArchive {
 	@Produces(MediaType.APPLICATION_XML)
 	public DocumentCollection searchAsXML(@PathParam("terms") String terms) throws IOException, EncodeException, SearchException, URISyntaxException {
 		DocumentCollection results = search(terms);
-		return results;
+		return results.getDocuments().size() > 0 ? results : getErrorDocColl("No documents found.");
 	}
 	
 	@GET
