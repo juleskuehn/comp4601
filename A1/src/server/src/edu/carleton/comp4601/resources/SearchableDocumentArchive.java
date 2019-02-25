@@ -55,11 +55,11 @@ public class SearchableDocumentArchive {
 		name = "COMP4601 Searchable Document Archive: Jules Kuehn and Brian Ferch";
 		store = MongoStore.getInstance();
 		lucene = new LuceneFacade();
-//		try {
-//			//SearchServiceManager.getInstance().start();
-//		} catch (URISyntaxException e) {
-//			e.printStackTrace();
-//		}
+		try {
+			SearchServiceManager.getInstance().start();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@GET
