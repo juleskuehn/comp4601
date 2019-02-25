@@ -7,6 +7,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PreDestroy;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.servlet.http.*;
 import javax.websocket.EncodeException;
 import javax.ws.rs.Consumes;
@@ -37,6 +40,14 @@ import edu.carleton.comp4601.utility.SearchServiceManager;
 
 @Path("/sda")
 public class SearchableDocumentArchive {
+	
+	@PreDestroy
+    public void preDestroy() {
+		// Disconnect from search server explicitly on shutdown
+		System.out.println("Disconnecting from distributed search...");
+		SearchServiceManager.getInstance().stop();
+	}
+	
 	// Allows to insert contextual objects into the class,
 	// e.g. ServletContext, Request, Response, UriInfo
 	@Context
