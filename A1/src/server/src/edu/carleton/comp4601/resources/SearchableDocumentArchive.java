@@ -49,7 +49,6 @@ public class SearchableDocumentArchive {
 	public static MongoStore store;
 	public static LuceneFacade lucene;
 	private String name;
-	private boolean boostOn;
 
 	public SearchableDocumentArchive() {
 		
@@ -243,7 +242,7 @@ public class SearchableDocumentArchive {
 	@Path("/reset")
 	public String resetIndex() {
 		try {
-	        lucene.index(true, boostOn);
+	        lucene.index(true, true);
 			return HTMLMessage("Reset success");
 		} catch(Exception e) {
 			return HTMLMessage("Error occured while indexing: " + e.getMessage());
@@ -378,7 +377,7 @@ public class SearchableDocumentArchive {
 	@Path("/list")
 	public String listServices() {
 		ArrayList<String> services = SearchServiceManager.getInstance().list();
-		String output = "<ul>";
+		String output = "<h1>List of connected services:</h1><ul>";
 		for (String service : services) {
 			output += "<li>" + service + "</li>";
 		}
