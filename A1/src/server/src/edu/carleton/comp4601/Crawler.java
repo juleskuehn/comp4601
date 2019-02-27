@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
+import edu.carleton.comp4601.resources.LuceneFacade;
 import edu.uci.ics.crawler4j.crawler.Page;
 import edu.uci.ics.crawler4j.crawler.WebCrawler;
 import org.apache.tika.metadata.Metadata;
@@ -185,6 +186,9 @@ public class Crawler extends WebCrawler {
     	}
     	// Save the serialized graph to Mongo
     	mongoStore.addGraph(g);
+    	// Build Lucene index
+    	LuceneFacade lucene = new LuceneFacade();
+    	lucene.index(true, true);
     }
 
 }
