@@ -5,15 +5,24 @@ Brian Ferch
 100962115
 
 
-Usage:
 
-Run "Controller" (as a Java application).
- - This will build a MongoDB collection for the crawled pages, and for the graph.
- - It will then compute PageRank and build a Lucene index.
+COMP4601 Assignment 1
+Winter 2019
 
-Run "SearchableDocumentArchive" (on Tomcat).
+
+
+Usage: Run WAR file on Tomcat 9.0
+
+ - To crawl and create a local mongoDB and Lucene index:
+	http://localhost:8080/COMP4601-SDA/rest/sda/crawl/{maxPages}
+	As packaged, crawls the following pages with 3 crawler threads:
+				"http://lol.jules.lol/parsertest/",
+	        	"https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/resources/N-0.html",
+	        	"https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/handouts/"
+
  - To create a document:
 	http://localhost:8080/COMP4601-SDA/HTML/create_document.html
+
  - Other endpoints:
 	http://localhost:8080/COMP4601-SDA/rest/sda    (POST, GET)
 	http://localhost:8080/COMP4601-SDA/rest/sda/list

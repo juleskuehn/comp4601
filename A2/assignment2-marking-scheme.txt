@@ -1,0 +1,18 @@
+COMP 4601 Assignment 2 Marking Scheme (100 marks)
+
+Note:
+
+Clarifications, as always, are welcome.
+
+1. Documentation of design in ANALYSIS.PDF (30 marks)
+2. Documentation of SUGGEST algorithm (15 marks)
+3. Features:
+	context			10
+	community		10
+	fetch/{user}/{page}	25
+	advertising/{category}	10
+
+
+
+
+
