@@ -1,4 +1,5 @@
 from flask import Flask
+from html_builders import *
 
 app = Flask(__name__)
 
@@ -16,7 +17,7 @@ def community():
 
 @app.route("/rs/fetch/<user>/<page>")
 def userPage(user, page):
-  return "User: " + user + " Page: " + page
+  return basePage(f"{user} - {page}", pageWithAds(page, loremIpsum))
 
 @app.route("/rs/advertising/<category>")
 def advertisingCategory(category):
