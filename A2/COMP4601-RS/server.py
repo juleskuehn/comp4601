@@ -20,7 +20,7 @@ def userPage(user, page):
 
 @app.route("/rs/advertising/<category>")
 def advertisingCategory(category):
-  return "Advertising Catergory: " + category
+  return "Advertising Category: " + category
 
 if __name__ == '__main__':
   app.run(debug=True)
