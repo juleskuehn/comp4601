@@ -38,12 +38,33 @@ def svd_reduceDimensions(R, k):
 
     return UK, np.sqrt(SK), VK
 
-def fillAndNormalize(R, userAvgRatings, userAvgHelpfuls=None):
+def svd_predict(Uk, SkSqrt, Vkt, userAvgRatings, userId, movieId):
+    pseudoUsers = Uk.dot(SkSqrt)
+    pseudoFilms = SkSqrt.dot(Vkt)
+    return (userAvgRatings[userId]
+            + pseudoUsers[userId].dot(pseudoFilms[:, movieId]))
+
+def calc_userAvgs(ratingsFrame, helpfulsFrame, userId_to_profileName=None, show=True): # Get (and print) user stats
+    # Get (and print) user stats
+    userAvgRatings = {}
+    userAvgHelpfuls = {}
+    for userId in list(ratingsFrame.index):
+        userAvgRatings[userId] = calc_userAvgRating(ratingsFrame, userId)
+        userAvgHelpfuls[userId] = calc_userAvgHelpful(helpfulsFrame, userId)
+        if show:
+            print(f'{userId:15} : {userId_to_profileName[userId]:30}'
+                + f'    {to_stars(userAvgRatings[userId]):3.1f} star avg'
+                + f'    {userAvgHelpfuls[userId]*100:3.0f}% helpful')
+    return userAvgRatings, userAvgHelpfuls
+
+def fillRatingsFrame(R, userAvgRatings):
     R = R.copy()
     # Fill missing values with item averages
     allMoviesAvg = np.average(
-                    [rating for _, rating in userAvgRatings.iteritems()])
-    for movieId in list(R):
+                    [rating for _, rating in userAvgRatings.items()])
+    print("allMoviesAvg", allMoviesAvg)
+    for i, movieId in enumerate(list(R)):
+        filled = 0
         movieRatings = R.loc[:, movieId]
         movieAvg = np.average(
         [rating for rating in movieRatings
@@ -54,13 +75,17 @@ def fillAndNormalize(R, userAvgRatings, userAvgHelpfuls=None):
         # Otherwise fill in empty ratings with the movie average
         else:
             for userId in list(R.index):
-                R.loc[userId, movieId] -= movieId in list(R)
+                if R.loc[userId, movieId] < 0:
+                    filled += 1
+                    R.loc[userId, movieId] = movieAvg
+        print("Filled", filled, "ratings for movieId", movieId, f'with {movieAvg:3.2f} ({i*100/len(list(R)):3.0f}% done)')
+    return R
 
+def normalizeRatingsFrame(R, userAvgRatings, userAvgHelpfuls=None):
     # Normalize: Subtract user average from each of their ratings
     for userId in list(R.index):
         # TODO Multiply by helpfulness to increase weight?
-        R[userId] -= userAvgRatings[userId]
+        R.loc[userId, :] -= userAvgRatings[userId]
         if userAvgHelpfuls != None:
-            R[userId] *= userAvgHelpfuls[userId]
-
+            R.loc[userId, :] *= userAvgHelpfuls[userId]
     return R

@@ -1,4 +1,5 @@
 from flask import Flask
+from dao import *
 
 app = Flask(__name__)
 
@@ -8,11 +9,19 @@ def name():
 
 @app.route("/rs/context")
 def context():
-  return "Context page"
+  string = "Generated user profiles:"
+  for userId in userId_to_profileName:
+    string += get_userString(userId) 
+  return string
 
 @app.route("/rs/community")
 def community():
-  return "Community page"
+  m = 4 # 4 communities
+  userNamesByCluster = [[] for _ in range(m)]
+  for userId, userName in userId_to_profileName.items():
+    userCluster = get_userCluster(userId)
+    userNamesByCluster[userCluster].append(userName)
+  return f'{userNamesByCluster}'
 
 @app.route("/rs/fetch/<user>/<page>")
 def userPage(user, page):
