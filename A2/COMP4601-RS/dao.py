@@ -1,7 +1,8 @@
 import pickle
 import pandas as pd
+from scipy.spatial import distance
 from movie_helpers import to_stars
-    
+
 ratingsFrame = pd.read_pickle('user_profiles/data_ratingsFrame.pkl')
 helpfulsFrame = pd.read_pickle('user_profiles/data_helpfulsFrame.pkl')
 
@@ -41,3 +42,35 @@ def get_userPoint(userId):
 
 def get_userString(userId):
     return f'<br>{userId} {get_userName(userId)} {get_userAvgHelpful(userId):3.1f}% helpful {get_userAvgRating(userId):3.1f} star average rating. Cluster {get_userCluster(userId)}'
+
+def get_rating(userId, movieId):
+    return ratingsFrame.loc[userId, movieId]
+
+# Returns a list of userIds for the k nearest neighbours in 2d
+def get_neighbours(userId, k):
+    # Get k nearest neighbours to user in 2d
+    user2d = ratings2d.loc[userId]
+    # Find the distance between this user and everyone else.
+    euclidean_distances = ratings2d.apply(lambda user: distance.euclidean(user, user2d), axis=1)
+    distance_frame = pd.DataFrame(data={"dist": euclidean_distances, "userId": euclidean_distances.index})
+    distance_frame.sort_values("dist", inplace=True)
+    # Since the smallest distance would be this user, don't include first userId
+    return [distance_frame.iloc[i]["userId"] for i in range(1, k + 1)]
+
+def print_neighbours(userId, k):
+    for neighbourId in get_neighbours(userId, k):
+        print(get_userString(neighbourId))
+
+def get_userRatings(userId):
+    # Returns a dictionary {movieId: rating, ...} for movies this user rated
+    # 
+    ratings = {}
+
+    return
+
+def predict_rating(userId, movieId, k=20):
+    neighbours = get_neighbours(userId, k)
+    # Do user-based collaborative filtering with nearest neighbours in 2d?
+    for neighbourId in neighbours:
+        print(get_userString(neighbourId))
+        print(get_userRatings(neighbourId))

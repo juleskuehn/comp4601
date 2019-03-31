@@ -85,8 +85,10 @@ if __name__ == '__main__':
     user_PIL_Image.show()
     print(user)
 
+    print(user.ratingsFrame)
+
     # Print all users
-    with open('user_profiles/data_userId_to_profileName.pkl', 'rb') as f:
-        userId_to_profileName = pickle.load(f)
-        for userId in userId_to_profileName:
-            print(User(userId))
+    # with open('user_profiles/data_userId_to_profileName.pkl', 'rb') as f:
+    #     userId_to_profileName = pickle.load(f)
+    #     for userId in userId_to_profileName:
+    #         print(User(userId))

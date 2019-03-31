@@ -75,9 +75,10 @@ def fillRatingsFrame(R, userAvgRatings):
         # Otherwise fill in empty ratings with the movie average
         else:
             for userId in list(R.index):
+                adjustRating = userAvgRatings[userId] - allMoviesAvg
                 if R.loc[userId, movieId] < 0:
                     filled += 1
-                    R.loc[userId, movieId] = movieAvg
+                    R.loc[userId, movieId] = movieAvg + adjustRating
         print("Filled", filled, "ratings for movieId", movieId, f'with {movieAvg:3.2f} ({i*100/len(list(R)):3.0f}% done)')
     return R
 

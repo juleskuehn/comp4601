@@ -1,8 +1,0 @@
-Reducing ratings matrix to 2d:
-
-	After filling and normalizing:
-	error = 23.678606890442545% after reconstructing (l2 norm of original - reconstruction)
-
-	Before filling and normalizing:
-	error = 29.176669393025957%
-
