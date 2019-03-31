@@ -51,7 +51,7 @@ Given this information, some useful characterizations can be made on each user. 
 
 \section{Clustering users into communities}
 
-The ratings table is large (1252 rows x 1079 columns) and very sparse (93.9\%). We first reduced this to a dense, low-dimensional representation by the following process:
+The ratings table is large: 1252 rows (users) x 1079 columns (movies). It is also very sparse (93.9\% empty). We first reduced this to a dense, low-dimensional representation by the following process:
 \begin{enumerate}
     \item Calculate average ratings for each movie, each user, and the overall average
     \item Fill the missing ratings with the movie's average rating, adjusted to the user's average rating: $rFill = movieAvg + userAvg - overallAvg$
@@ -89,6 +89,7 @@ Given these results, we used a 2-dimensional representation for users. We determ
     \end{minipage}
 \end{figure}\newline
 
+
 % \lstinputlisting{results/results.txt}
 
 % \begin{figure}[h!]
@@ -97,7 +98,7 @@ Given these results, we used a 2-dimensional representation for users. We determ
 %         \caption{Percentage of Recognition Errors}
 % \end{figure}
 
-\section{Clustering movies according to page text}
+\section{Topic analysis on movies according to page text}
 
 ...
 
@@ -106,6 +107,10 @@ Given these results, we used a 2-dimensional representation for users. We determ
 ...
 
 \section{SUGGEST algorithm}
+
+...
+
+\section{Improvements}
 
 ...
 

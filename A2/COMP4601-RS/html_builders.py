@@ -1,3 +1,5 @@
+from movie_helpers import recommendMovie
+
 def basePage(title, content):
   return f"""
     <!DOCTYPE html>
@@ -54,7 +56,22 @@ def pageWithAds(pageName, advertisingContent):
       </div>
       <div id="advertising">{advertisingContent}</div>
     </div>"""
-    
+
+def genAdvertising(movieId, userId, userAssignments, movieAssignments, communityRatings, communityRecs):
+  userCommunity = userAssignments[userId]
+  movieTopic = movieAssignments[movieId]
+  recommendedMovieId = recommendMovie(movieTopic, userCommunity, communityRecs)
+
+  return f"""
+    <h1>Custom advertisement for movie {movieId} and user {userId}</h1>
+    <p>A random movie is pulled from a subset of movies determined by the following criteria:
+    <ul>
+      <li>Movie is rated better than community average by this user's community (community {userCommunity}).</li>
+      <li>Movie has the same top topic as this movie (topic {movieTopic})</li>
+    <ul>
+    <p>Selected movie is <strong>{recommendedMovieId}</strong>, which is rated {communityRatings.loc[userCommunity, recommendedMovieId]} by community {userCommunity}.</p>
+    <p><a href="{buildPageUrl(recommendedMovieId)}">Read reviews for {recommendedMovieId}</a></p>
+    """
 
 loremIpsum = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sodales fermentum enim quis tincidunt. Maecenas tempor tortor in risus mattis tincidunt. Ut luctus ipsum sit amet turpis lacinia, vel dictum risus congue. Fusce et vestibulum est. Maecenas scelerisque gravida nibh. Phasellus eu purus ex. Ut non lorem in ligula euismod efficitur. Maecenas vestibulum orci nec finibus tempor. Curabitur vulputate, quam ut commodo rutrum, lectus libero scelerisque mauris, eu porttitor nisl nunc sed elit. Nulla facilisi. Suspendisse ac sapien cursus, hendrerit neque vel, dictum mi. In eu eleifend tellus. Vivamus nec diam nunc. Vivamus fringilla, ex sed tempor pulvinar, purus ipsum faucibus ligula, eget dictum tortor mauris nec risus.
 
