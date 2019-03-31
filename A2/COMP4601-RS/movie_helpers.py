@@ -89,3 +89,7 @@ def normalizeRatingsFrame(R, userAvgRatings, userAvgHelpfuls=None):
         if userAvgHelpfuls != None:
             R.loc[userId, :] *= userAvgHelpfuls[userId]
     return R
+
+def recommendMovie(movieTopic, userCommunity, communityRecs):
+    return movieId
+    
