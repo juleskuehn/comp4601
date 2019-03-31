@@ -20,6 +20,8 @@ with open('user_profiles/userAssignments2d.pkl', 'rb') as f:
     userAssignments2d = pickle.load(f)
 with open('user_profiles/userAssignments200d.pkl', 'rb') as f:
     userAssignments200d = pickle.load(f)
+with open('LDA/topicWordsDict.pkl', 'rb') as f:
+    
 # TODO get timestamps of reviews (from HTML) in DataFrame corresponding to ratingsFrame
 
 def get_userName(userId):
