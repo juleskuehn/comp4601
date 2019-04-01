@@ -1,4 +1,4 @@
-from movie_helpers import recommendMovie
+from movie_helpers import recommendMovie, to_stars
 
 def basePage(title, content):
   return f"""
@@ -61,7 +61,6 @@ def genAdvertising(movieId, userId, userAssignments, movieAssignments, community
   userCommunity = userAssignments.loc[userId, 0]
   movieTopic = movieAssignments[movieId]
   recommendedMovieId = recommendMovie(movieTopic, userCommunity, communityRecs, movieAssignments)
-
   return f"""
     <h1>Custom advertisement for movie {movieId} and user {userId}</h1>
     <p>A random movie is pulled from a subset of movies determined by the following criteria:
@@ -69,6 +68,6 @@ def genAdvertising(movieId, userId, userAssignments, movieAssignments, community
       <li>Movie is rated better than community average by this user's community (community {userCommunity}).</li>
       <li>Movie has the same top topic as this movie (topic {movieTopic})</li>
     <ul>
-    <p>Selected movie is <strong>{recommendedMovieId}</strong>, which is rated {communityRatings.loc[userCommunity, recommendedMovieId]} by community {userCommunity}.</p>
+    <p>Selected movie is <strong>{recommendedMovieId}</strong>, which is rated {to_stars(communityRatings.loc[userCommunity, recommendedMovieId]):.2f} stars by community {userCommunity}.</p>
     <p><a href="{buildPageUrl(recommendedMovieId)}">Read reviews for {recommendedMovieId}</a></p>
     """

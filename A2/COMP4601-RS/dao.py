@@ -1,8 +1,8 @@
 import pickle
 import pandas as pd
-from scipy.spatial import distance
 from movie_helpers import to_stars
 import numpy as np
+# from scipy.spatial import distance
 
 ratingsFrame = pd.read_pickle('user_profiles/data_ratingsFrame.pkl')
 helpfulsFrame = pd.read_pickle('user_profiles/data_helpfulsFrame.pkl')
@@ -23,6 +23,8 @@ with open('user_profiles/userAssignments200d.pkl', 'rb') as f:
     userAssignments200d = pickle.load(f)
 with open('LDA/movieTopicDict.pkl', 'rb') as f:
     movieAssignments = pickle.load(f)
+with open('LDA/topicWordsDict.pkl', 'rb') as f:
+    topicWords = pickle.load(f)
     
 communityRecs = []
 with open('user_profiles/community_recommendations.txt', 'r') as f:
@@ -39,6 +41,12 @@ with open('user_profiles/community_ratings.txt', 'r') as f:
     communityRatings = pd.DataFrame(np.array(communityRatings), columns=columns)
 
 # TODO get timestamps of reviews (from HTML) in DataFrame corresponding to ratingsFrame
+
+def print_topics():
+    for topic in topicWords:
+        print(topicWords[topic])
+    import collections
+    print(collections.Counter(topicWords[0]+topicWords[1]+topicWords[2]+topicWords[3]))
 
 def get_userName(userId):
     return userId_to_profileName[userId]
@@ -65,30 +73,16 @@ def get_rating(userId, movieId):
     return ratingsFrame.loc[userId, movieId]
 
 # Returns a list of userIds for the k nearest neighbours in 2d
-def get_neighbours(userId, k):
-    # Get k nearest neighbours to user in 2d
-    user2d = ratings2d.loc[userId]
-    # Find the distance between this user and everyone else.
-    euclidean_distances = ratings2d.apply(lambda user: distance.euclidean(user, user2d), axis=1)
-    distance_frame = pd.DataFrame(data={"dist": euclidean_distances, "userId": euclidean_distances.index})
-    distance_frame.sort_values("dist", inplace=True)
-    # Since the smallest distance would be this user, don't include first userId
-    return [distance_frame.iloc[i]["userId"] for i in range(1, k + 1)]
+# def get_neighbours(userId, k):
+#     # Get k nearest neighbours to user in 2d
+#     user2d = ratings2d.loc[userId]
+#     # Find the distance between this user and everyone else.
+#     euclidean_distances = ratings2d.apply(lambda user: distance.euclidean(user, user2d), axis=1)
+#     distance_frame = pd.DataFrame(data={"dist": euclidean_distances, "userId": euclidean_distances.index})
+#     distance_frame.sort_values("dist", inplace=True)
+#     # Since the smallest distance would be this user, don't include first userId
+#     return [distance_frame.iloc[i]["userId"] for i in range(1, k + 1)]
 
 def print_neighbours(userId, k):
     for neighbourId in get_neighbours(userId, k):
         print(get_userString(neighbourId))
-
-def get_userRatings(userId):
-    # Returns a dictionary {movieId: rating, ...} for movies this user rated
-    # 
-    ratings = {}
-
-    return
-
-def predict_rating(userId, movieId, k=20):
-    neighbours = get_neighbours(userId, k)
-    # Do user-based collaborative filtering with nearest neighbours in 2d?
-    for neighbourId in neighbours:
-        print(get_userString(neighbourId))
-        print(get_userRatings(neighbourId))

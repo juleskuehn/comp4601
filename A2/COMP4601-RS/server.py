@@ -26,12 +26,12 @@ def community():
 
 @app.route("/rs/fetch/<user>/<page>")
 def userPage(user, page):
-  ad = genAdvertising(page, user, userAssignments2d, movieAssignments, communityRatings, communityRecs);
+  ad = genAdvertising(page, user, userAssignments2d, movieAssignments, communityRatings, communityRecs)
   return basePage(f"{user} - {page}", pageWithAds(page, ad))
 
 @app.route("/rs/advertising/<category>")
 def advertisingCategory(category):
-  return "Advertising Category: " + category
+  return basePage("Ads for category " + category, f'{communityRecs[int(category)]}')
 
 if __name__ == '__main__':
   app.run(debug=True)
