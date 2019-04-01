@@ -56,9 +56,9 @@ The ratings table is large: 1252 rows (users) x 1079 columns (movies). It is als
     \item Calculate average ratings for each movie, each user, and the overall average
     \item Fill the missing ratings with the movie's average rating, adjusted to the user's average rating: $rFill = movieAvg + userAvg - overallAvg$
     \item Normalize the matrix to adjust for user average ratings in general.
-    \item Determine an appropriate number of dimensions $k$. We can see below that the user clusters determined from the 200-dimensional representation are very similar to the 2-dimensional representation, and that the vast majority of the variance occurs in a single dimension.
+    \item Determine an appropriate number of dimensions $k$ for truncation.
 \end{enumerate}
-
+Reconstructing the original matrix from the 2-dimensional truncated SVD yields an error of 29.2\% without filling or normalization. After filling and normalization though, the error is reduced to 23.7\%. Truncating at 200 dimensions, this error drops to 9.3\%. However, this has little effect on the clustering of users. We can see below that the user clusters determined from the 200-dimensional representation are very similar to the 2-dimensional representation, and that the vast majority of the variance occurs in a single dimension.
 \begin{figure}[h!]
     \centering
     \begin{minipage}{0.45\textwidth}

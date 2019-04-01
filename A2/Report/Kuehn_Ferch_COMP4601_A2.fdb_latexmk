@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1554072139 "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.tex" "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.pdf" "Kuehn_Ferch_COMP4601_A2" 1554072139
+["pdflatex"] 1554085901 "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.tex" "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.pdf" "Kuehn_Ferch_COMP4601_A2" 1554085901
   "C:/Users/Jules/AppData/Local/MiKTeX/2.9/miktex/data/le/pdftex/pdflatex.fmt" 1538952032 4162302 bd49085d9b071120ec5a29c15b93e08e ""
   "C:/Users/Jules/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map" 1545005590 82074 6a1df9e5cde162f85fa9aea76d51d7a6 ""
   "C:/Users/Jules/AppData/Local/Programs/MiKTeX 2.9/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1233955448 1004 54797486969f23fa377b128694d548df ""
@@ -169,17 +169,17 @@
   "C:/Users/Jules/AppData/Local/Programs/MiKTeX 2.9/tex/latex/xcolor/xcolor.sty" 1463135581 57049 34128738f682d033422ca125f82e5d62 ""
   "Kuehn_Ferch_COMP4601_A2.aux" 0 -1 0 ""
   "Kuehn_Ferch_COMP4601_A2.out" 0 -1 0 ""
-  "Kuehn_Ferch_COMP4601_A2.tex" 1554072132 5265 72b3e55ba47ea2c3196198b4289cf435 ""
-  "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.aux" 1554072139 9 a94a2480d3289e625eea47cd1b285758 ""
-  "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.tex" 1554072132 5265 72b3e55ba47ea2c3196198b4289cf435 ""
+  "Kuehn_Ferch_COMP4601_A2.tex" 1554085895 5600 b4f806e43964c5261d656e34b6500817 ""
+  "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.aux" 1554085901 9 a94a2480d3289e625eea47cd1b285758 ""
+  "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.tex" 1554085895 5600 b4f806e43964c5261d656e34b6500817 ""
   "images/kmeans_elbow_200d.png" 1553705241 29625 f66fad39d4acf6b7dd22763c6e56d2e1 ""
   "images/kmeans_elbow_2d.png" 1553705201 25503 538f004a23a63f745119cd0004f5f35d ""
   "images/user_clusters_200d.png" 1553706092 67031 ed3a8c860c07419db2f54a71f92ac76d ""
   "images/user_clusters_2d.png" 1553706133 66850 61643e7e70d5227fc7283b3b30ed9487 ""
   (generated)
-  "Kuehn_Ferch_COMP4601_A2.pdf"
-  "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.pdf"
-  "Kuehn_Ferch_COMP4601_A2.aux"
   "Kuehn_Ferch_COMP4601_A2.out"
-  "Kuehn_Ferch_COMP4601_A2.log"
+  "Kuehn_Ferch_COMP4601_A2.aux"
+  "Kuehn_Ferch_COMP4601_A2.pdf"
   "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.log"
+  "c:/Users/Jules/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/A2/Report/Kuehn_Ferch_COMP4601_A2.pdf"
+  "Kuehn_Ferch_COMP4601_A2.log"
