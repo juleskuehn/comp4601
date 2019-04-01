@@ -61,7 +61,6 @@ def genAdvertising(movieId, userId, userAssignments, movieAssignments, community
   userCommunity = userAssignments.loc[userId, 0]
   movieTopic = movieAssignments[movieId]
   recommendedMovieId = recommendMovie(movieTopic, userCommunity, communityRecs, movieAssignments)
-
   return f"""
     <h1>Custom advertisement for movie {movieId} and user {userId}</h1>
     <p>A random movie is pulled from a subset of movies determined by the following criteria:
