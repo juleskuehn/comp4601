@@ -58,9 +58,9 @@ def pageWithAds(pageName, advertisingContent):
     </div>"""
 
 def genAdvertising(movieId, userId, userAssignments, movieAssignments, communityRatings, communityRecs):
-  userCommunity = userAssignments[userId]
+  userCommunity = userAssignments.loc[userId, 0]
   movieTopic = movieAssignments[movieId]
-  recommendedMovieId = recommendMovie(movieTopic, userCommunity, communityRecs)
+  recommendedMovieId = recommendMovie(movieTopic, userCommunity, communityRecs, movieAssignments)
 
   return f"""
     <h1>Custom advertisement for movie {movieId} and user {userId}</h1>
