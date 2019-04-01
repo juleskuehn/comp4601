@@ -2,6 +2,7 @@ import pickle
 import pandas as pd
 from scipy.spatial import distance
 from movie_helpers import to_stars
+import numpy as np
 
 ratingsFrame = pd.read_pickle('user_profiles/data_ratingsFrame.pkl')
 helpfulsFrame = pd.read_pickle('user_profiles/data_helpfulsFrame.pkl')
@@ -22,6 +23,19 @@ with open('user_profiles/userAssignments200d.pkl', 'rb') as f:
     userAssignments200d = pickle.load(f)
 with open('LDA/movieTopicDict.pkl', 'rb') as f:
     movieAssignments = pickle.load(f)
+communityRecs = []
+with open('user_profiles/community_recommendations.txt', 'r') as f:
+    for line in f:
+        communityRecs.append([movieId for movieId in line.split()])
+
+communityRatings = []
+with open('user_profiles/community_ratings.txt', 'r') as f:
+    for i, line in enumerate(f):
+        if i == 0:
+            columns = [movieId for movieId in line.split()]
+        else:
+            communityRatings.append([float(rating) for rating in line.split()])
+    communityRatings = pd.DataFrame(np.array(communityRatings), columns=columns)
 
 # TODO get timestamps of reviews (from HTML) in DataFrame corresponding to ratingsFrame
 
