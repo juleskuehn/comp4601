@@ -9,14 +9,14 @@ import pickle
 
 numTopWords = 200
 numTopTopicWords = 15
-numTopics = 6
+numTopics = 4
 numIterations = 10
 numPagesToProcess = 10
 
 # pages directory expected to be in cwd
 pagesPath = "./pages/"
 pagesFileNames = [f for f in listdir(pagesPath) if isfile(join(pagesPath, f))]
-pagesFileNames = pagesFileNames[:numPagesToProcess]
+#pagesFileNames = pagesFileNames[:numPagesToProcess]
 filePaths = [join(pagesPath, fileName) for fileName in pagesFileNames]
 
 parser = CorpusParser(filePaths)

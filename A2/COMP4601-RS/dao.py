@@ -23,6 +23,7 @@ with open('user_profiles/userAssignments200d.pkl', 'rb') as f:
     userAssignments200d = pickle.load(f)
 with open('LDA/movieTopicDict.pkl', 'rb') as f:
     movieAssignments = pickle.load(f)
+    
 communityRecs = []
 with open('user_profiles/community_recommendations.txt', 'r') as f:
     for line in f:
