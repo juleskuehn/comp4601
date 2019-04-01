@@ -1,8 +1,8 @@
 import pickle
 import pandas as pd
-from scipy.spatial import distance
 from movie_helpers import to_stars
 import numpy as np
+# from scipy.spatial import distance
 
 ratingsFrame = pd.read_pickle('user_profiles/data_ratingsFrame.pkl')
 helpfulsFrame = pd.read_pickle('user_profiles/data_helpfulsFrame.pkl')
@@ -73,15 +73,15 @@ def get_rating(userId, movieId):
     return ratingsFrame.loc[userId, movieId]
 
 # Returns a list of userIds for the k nearest neighbours in 2d
-def get_neighbours(userId, k):
-    # Get k nearest neighbours to user in 2d
-    user2d = ratings2d.loc[userId]
-    # Find the distance between this user and everyone else.
-    euclidean_distances = ratings2d.apply(lambda user: distance.euclidean(user, user2d), axis=1)
-    distance_frame = pd.DataFrame(data={"dist": euclidean_distances, "userId": euclidean_distances.index})
-    distance_frame.sort_values("dist", inplace=True)
-    # Since the smallest distance would be this user, don't include first userId
-    return [distance_frame.iloc[i]["userId"] for i in range(1, k + 1)]
+# def get_neighbours(userId, k):
+#     # Get k nearest neighbours to user in 2d
+#     user2d = ratings2d.loc[userId]
+#     # Find the distance between this user and everyone else.
+#     euclidean_distances = ratings2d.apply(lambda user: distance.euclidean(user, user2d), axis=1)
+#     distance_frame = pd.DataFrame(data={"dist": euclidean_distances, "userId": euclidean_distances.index})
+#     distance_frame.sort_values("dist", inplace=True)
+#     # Since the smallest distance would be this user, don't include first userId
+#     return [distance_frame.iloc[i]["userId"] for i in range(1, k + 1)]
 
 def print_neighbours(userId, k):
     for neighbourId in get_neighbours(userId, k):
