@@ -90,6 +90,13 @@ def normalizeRatingsFrame(R, userAvgRatings, userAvgHelpfuls=None):
             R.loc[userId, :] *= userAvgHelpfuls[userId]
     return R
 
-def recommendMovie(movieTopic, userCommunity, communityRecs):
-    return movieId
-    
+def recommendMovie(movieTopic, userCommunity, communityRecs, movieAssignments):
+    # Returns first random movie matching movieTopic
+    userCommunityRecs = communityRecs[userCommunity]
+    np.random.shuffle(userCommunityRecs)
+    for movieId in userCommunityRecs:
+        if movieAssignments[movieId] == movieTopic:
+            return movieId
+    # If there is no movie in this topic recommended by the community,
+    # just return a random movie that the community likes
+    return userCommunityRecs[0]
