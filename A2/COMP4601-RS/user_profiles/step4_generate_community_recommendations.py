@@ -8,6 +8,7 @@ from movie_helpers import *
 from collections import defaultdict
 from sklearn.cluster import KMeans
 
+
 print(f"\nLoading from data_*.pkl")
 ratingsFrame = pd.read_pickle('data_ratingsFrame.pkl')
 with open('userAssignments2d.pkl', 'rb') as f:
@@ -53,7 +54,25 @@ for community in range(numCommunities):
         if rating >= communityAvgs[community]:
             communityRecs[community].append(movieId)
 
-communityRatings.to_pickle('community_ratings.pkl')
 
-with open('community_recommendations.pkl', 'w') as f:
-    pickle.dump(communityRecs, f)
+# Make some text representations since the pickle won't work (???)
+comRecStr = ""
+for communityRec in communityRecs:
+    comRecStr += ' '.join(communityRec)
+    comRecStr += "\n"
+
+with open('community_recommendations.txt', 'w') as f:
+    f.write(comRecStr)
+
+comRatingStr = ' '.join(ratingsFrame.columns) + '\n'
+for row in communityRatings.iterrows():
+    comRatingStr += ' '.join([str(rating) for rating in row[1].tolist()]) + '\n'
+
+with open('community_ratings.txt', 'w') as f:
+    f.write(comRatingStr)
+
+
+# with open('community_recommendations.pkl', 'wb') as f:
+#     pickle.dump(communityRecs, f)
+
+# communityRatings.to_pickle('community_ratings.pkl')
