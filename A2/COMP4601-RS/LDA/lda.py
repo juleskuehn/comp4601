@@ -66,12 +66,10 @@ for i, document in enumerate(transformed.collect()):
   maxSimilarityTopicId = max(topicDistribution, key=lambda x: x[1])[0]
   movieTopicDictionary[movieId] = maxSimilarityTopicId
 
-pickle_out = open("topicWordsDict.pkl", "wb")
-pickle.dump(topicWordsDictionary, pickle_out)
-pickle_out.close()
+with open("topicWordsDict.pkl", "wb") as f:
+  pickle.dump(topicWordsDictionary, f)
 
-pickle_out = open("movieTopicDict.pkl", "wb")
-pickle.dump(movieTopicDictionary, pickle_out)
-pickle_out.close()
+with open("movieTopicDict.pkl", "wb") as f:
+  pickle.dump(movieTopicDictionary, f)
 
 spark.stop()
