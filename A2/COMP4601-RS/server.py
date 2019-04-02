@@ -4,18 +4,24 @@ from html_builders import *
 
 app = Flask(__name__)
 
+state = {"contextRun": False}
+
 @app.route("/rs")
 def name():
   return "COMP4601-RS"
 
 @app.route("/rs/context")
 def context():
+  state["contextRun"] = True
   tableHeaders = ['User ID', 'User Name', 'Helpfullness', 'Average Star Rating', 'Cluster']
   tableRows = get_userRows()
   return basePage('Context', tablePage('Generated user profiles', tableHeaders, tableRows))
 
 @app.route("/rs/community")
 def community():
+  if not state["contextRun"]:
+    return basePage('Error: Context not run', '<h1>Error: Please run context before running community</h1>')
+
   m = 4 # 4 communities
   userNamesByCluster = [[] for _ in range(m)]
   for userId, userName in userId_to_profileName.items():
@@ -42,7 +48,7 @@ def advertisingCategory(category):
   movieLinks = []
   for movieId in movieIds:
     movieLinks.append(movieIdToLink(movieId))
-    
+
   content = f"""<div id="content">{style} {header} {' '.join(movieLinks)}</div>"""
   return basePage("Advertising Category " + category, content)
 
