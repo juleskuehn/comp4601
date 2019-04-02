@@ -7,29 +7,28 @@ from os.path import isfile, join, splitext
 from bs4 import BeautifulSoup
 import pickle
 
-numTopWords = 200
-numTopTopicWords = 15
+numTopWords = 500
+numTopTopicWords = 20
 numTopics = 4
 numIterations = 10
-numPagesToProcess = 10
 
 # pages directory expected to be in cwd
 pagesPath = "./pages/"
 pagesFileNames = [f for f in listdir(pagesPath) if isfile(join(pagesPath, f))]
-#pagesFileNames = pagesFileNames[:numPagesToProcess]
 filePaths = [join(pagesPath, fileName) for fileName in pagesFileNames]
 
+# generate spark compatible LDA dataset
 parser = CorpusParser(filePaths)
 filename = "lda_dataset.txt"
 parser.generateLDADataset(filename, numTopWords)
 
+# load spark
 sc = SparkContext("local", "LDA")
 spark = SparkSession.builder.appName("LDA").getOrCreate()
-
 sc.addFile(filename)
 dataset = spark.read.format("libsvm").load(filename)
 
-# Trains a LDA model.
+# train LDA model
 lda = LDA()
 lda.setK(numTopics).setMaxIter(numIterations)
 model = lda.fit(dataset)
@@ -39,9 +38,10 @@ lp = model.logPerplexity(dataset)
 print(f"The lower bound on the log likelihood of the entire corpus: {ll}")
 print(f"The upper bound on perplexity: {lp}")
 
-# Describe topics.
+# describe topics.
 topics = model.describeTopics(numTopTopicWords)
 
+# save topics as pickle
 topicWordsDictionary = {}
 
 for i, topic in enumerate(topics.collect()):
@@ -55,6 +55,7 @@ for i, topic in enumerate(topics.collect()):
 
 transformed = model.transform(dataset)
 
+# save top topic for each page as pickle
 movieTopicDictionary = {}
 
 for i, document in enumerate(transformed.collect()):

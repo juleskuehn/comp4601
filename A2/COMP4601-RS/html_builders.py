@@ -1,4 +1,4 @@
-from movie_helpers import recommendMovie, to_stars
+from movie_helpers import recommendMovie, to_stars, topicWordsList
 
 def basePage(title, content):
   return f"""
@@ -35,6 +35,7 @@ def pageWithAds(pageName, advertisingContent):
       #content {{
         display: flex;
         flex-direction: row;
+        height: 100vh;
       }}
 
       #page, #advertising {{
@@ -55,6 +56,39 @@ def pageWithAds(pageName, advertisingContent):
         <iframe frameBorder="0" src="{buildPageUrl(pageName)}"></iframe>
       </div>
       <div id="advertising">{advertisingContent}</div>
+    < / div > """
+    
+def tablePage(title, headers, rows):  
+  return f"""
+    <style>
+      table {{
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }}
+
+      td, th {{
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+      }}
+
+      tr:nth-child(even) {{
+        background-color: #dddddd;
+      }}
+
+      #content {{
+        margin: 0 30px;
+      }}
+    </style>
+    <div id="content">
+      <h1>{title}</h1>
+      <table>
+        <tr>
+          {' '.join(map(lambda header: f'<th>{header}</th>', headers))}
+        </tr>
+        {' '.join(map(lambda row: f"<tr>{' '.join(map(lambda entry: f'<td>{entry}</td>', row))}</tr>", rows))}
+      </table>
     </div>"""
 
 def genAdvertising(movieId, userId, userAssignments, movieAssignments, communityRatings, communityRecs):
@@ -67,7 +101,11 @@ def genAdvertising(movieId, userId, userAssignments, movieAssignments, community
     <ul>
       <li>Movie is rated better than community average by this user's community (community {userCommunity}).</li>
       <li>Movie has the same top topic as this movie (topic {movieTopic})</li>
-    <ul>
+    </ul>
+    <p>Topic words: {listToCommaString(topicWordsList(movieTopic))}
     <p>Selected movie is <strong>{recommendedMovieId}</strong>, which is rated {to_stars(communityRatings.loc[userCommunity, recommendedMovieId]):.2f} stars by community {userCommunity}.</p>
     <p><a href="{buildPageUrl(recommendedMovieId)}">Read reviews for {recommendedMovieId}</a></p>
     """
+
+def listToCommaString(list):
+    return ', '.join(list)

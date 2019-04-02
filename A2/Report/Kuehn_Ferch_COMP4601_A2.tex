@@ -109,7 +109,34 @@ Given these results, we used a 2-dimensional representation for users. We determ
 
 \section{Topic analysis on movies according to page text}
 
-...
+We could create some approximation of genre for each movie by extracting topics from the pages with the following process:
+
+\begin{enumerate}
+    \item Calculate LDA topics on review pages (since each page corresponds to one movie).
+    \item For each page, we take the topic with the maximum distribution value and call this the movie's topic.
+\end{enumerate}
+
+Tinkering with the parameters of LDA iteratively led us to topics that progressively came closer to mimicking genre.
+
+We strived to keep our distributions fairly biased to one topic since only the max was considered. Four topics
+ended up being the sweet spot that gave us this behavior.
+
+Stop words were added at each iteration as they appeared in the generated topics. In addition to conventional stop words,
+topic words that were too general and not indicative of genre like "movie" or "film" were added.
+
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{horrortopic}
+        \caption{Example "horror" topic}
+    \end{minipage}\hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{waractiontopic} % second figure itself
+        \caption{Example "war action" topic}
+    \end{minipage}
+\end{figure}
 
 
 \section{Generating and retrieving contextual advertisements}

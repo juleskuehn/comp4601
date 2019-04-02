@@ -66,8 +66,11 @@ def get_userCluster(userId):
 def get_userPoint(userId):
     return ratings2d.loc[userId, 0], ratings2d.loc[userId, 1]
 
-def get_userString(userId):
-    return f'<br>{userId} {get_userName(userId)} {get_userAvgHelpful(userId):3.1f}% helpful {get_userAvgRating(userId):3.1f} star average rating. Cluster {get_userCluster(userId)}'
+def get_userRows():
+    rows = []
+    for userId in userId_to_profileName:
+        rows.append([userId, get_userName(userId), f'{get_userAvgHelpful(userId):3.1f}', f'{get_userAvgRating(userId):3.1f}', get_userCluster(userId)])
+    return rows
 
 def get_rating(userId, movieId):
     return ratingsFrame.loc[userId, movieId]

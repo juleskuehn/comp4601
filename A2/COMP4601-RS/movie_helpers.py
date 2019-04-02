@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pickle
 
 def to_stars(rating):
     return (rating * 4) + 1
@@ -100,3 +101,9 @@ def recommendMovie(movieTopic, userCommunity, communityRecs, movieAssignments):
     # If there is no movie in this topic recommended by the community,
     # just return a random movie that the community likes
     return userCommunityRecs[0]
+
+def topicWordsList(topicId):
+    with open('./LDA/topicWordsDict.pkl', 'rb') as f:
+        topicWords = pickle.load(f)
+        topicList = topicWords[topicId]
+        return topicList

@@ -10,10 +10,9 @@ def name():
 
 @app.route("/rs/context")
 def context():
-  string = "Generated user profiles:"
-  for userId in userId_to_profileName:
-    string += get_userString(userId) 
-  return string
+  tableHeaders = ['User ID', 'User Name', 'Helpfullness', 'Average Star Rating', 'Cluster']
+  tableRows = get_userRows()
+  return basePage('Context', tablePage('Generated user profiles', tableHeaders, tableRows))
 
 @app.route("/rs/community")
 def community():
@@ -22,7 +21,13 @@ def community():
   for userId, userName in userId_to_profileName.items():
     userCluster = get_userCluster(userId)
     userNamesByCluster[userCluster].append(userName)
-  return f'{userNamesByCluster}'
+
+  tableHeaders = ['Community', 'Users']
+  tableRows = []
+  for index, cluster in enumerate(userNamesByCluster):
+    tableRows.append([f'C-{index + 1}', listToCommaString(cluster)])
+  
+  return basePage('Community', tablePage('User communities', tableHeaders, tableRows))
 
 @app.route("/rs/fetch/<user>/<page>")
 def userPage(user, page):
@@ -31,7 +36,10 @@ def userPage(user, page):
 
 @app.route("/rs/advertising/<category>")
 def advertisingCategory(category):
-  return basePage("Ads for category " + category, f'{communityRecs[int(category)]}')
+  style = '<style>body { margin: 0 30px; }</style>'
+  header = '<h1>Advertised movies for category ' + category + '</h1>'
+  return basePage("Advertising Category " + category,
+    f'{style} {header} {listToCommaString(communityRecs[int(category) - 1])}')
 
 if __name__ == '__main__':
   app.run(debug=True)
