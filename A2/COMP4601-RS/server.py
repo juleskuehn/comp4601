@@ -25,7 +25,7 @@ def community():
   tableHeaders = ['Community', 'Users']
   tableRows = []
   for index, cluster in enumerate(userNamesByCluster):
-    tableRows.append([f'C-{index + 1}', listToCommaString(cluster)])
+    tableRows.append([f'C-{index + 1}', ', '.join(cluster)])
   
   return basePage('Community', tablePage('User communities', tableHeaders, tableRows))
 
@@ -36,10 +36,15 @@ def userPage(user, page):
 
 @app.route("/rs/advertising/<category>")
 def advertisingCategory(category):
-  style = '<style>body { margin: 0 30px; }</style>'
+  style = '<style>#content { margin: 0 30px; }</style>'
   header = '<h1>Advertised movies for category ' + category + '</h1>'
-  return basePage("Advertising Category " + category,
-    f'{style} {header} {listToCommaString(communityRecs[int(category) - 1])}')
+  movieIds = communityRecs[int(category) - 1]
+  movieLinks = []
+  for movieId in movieIds:
+    movieLinks.append(movieIdToLink(movieId))
+    
+  content = f"""<div id="content">{style} {header} {' '.join(movieLinks)}</div>"""
+  return basePage("Advertising Category " + category, content)
 
 if __name__ == '__main__':
   app.run(debug=True)

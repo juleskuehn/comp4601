@@ -1,6 +1,7 @@
 import pickle
 import pandas as pd
 from movie_helpers import to_stars
+from html_builders import userIdToLink
 import numpy as np
 # from scipy.spatial import distance
 
@@ -69,7 +70,7 @@ def get_userPoint(userId):
 def get_userRows():
     rows = []
     for userId in userId_to_profileName:
-        rows.append([userId, get_userName(userId), f'{get_userAvgHelpful(userId):3.1f}', f'{get_userAvgRating(userId):3.1f}', get_userCluster(userId)])
+        rows.append([userIdToLink(userId), get_userName(userId), f'{get_userAvgHelpful(userId):3.1f}', f'{get_userAvgRating(userId):3.1f}', get_userCluster(userId)])
     return rows
 
 def get_rating(userId, movieId):

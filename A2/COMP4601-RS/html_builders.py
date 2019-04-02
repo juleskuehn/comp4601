@@ -13,7 +13,7 @@ def basePage(title, content):
 
         <style media="screen">
           body {{
-            margin: 0;
+            margin: 0 0 30px 0;
             font-family: Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
             line-height: 1.5;
             min-height: 100vh;
@@ -28,6 +28,15 @@ def basePage(title, content):
     
 def buildPageUrl(pageName):
   return f"https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/assignments/training/pages/{pageName}.html"
+
+def buildUserUrl(userId):
+  return f"https://sikaman.dyndns.org:8443/WebSite/rest/site/courses/4601/assignments/training/users/{userId}.html"
+
+def movieIdToLink(movieId):
+  return f'<a href="{buildPageUrl(movieId)}">{movieId}</a>'
+
+def userIdToLink(userId):
+  return f'<a href="{buildUserUrl(userId)}">{userId}</a>'
 
 def pageWithAds(pageName, advertisingContent):
   return f"""
@@ -102,10 +111,7 @@ def genAdvertising(movieId, userId, userAssignments, movieAssignments, community
       <li>Movie is rated better than community average by this user's community (community {userCommunity}).</li>
       <li>Movie has the same top topic as this movie (topic {movieTopic})</li>
     </ul>
-    <p>Topic words: {listToCommaString(topicWordsList(movieTopic))}
+    <p>Topic words: {', '.join(topicWordsList(movieTopic))}
     <p>Selected movie is <strong>{recommendedMovieId}</strong>, which is rated {to_stars(communityRatings.loc[userCommunity, recommendedMovieId]):.2f} stars by community {userCommunity}.</p>
     <p><a href="{buildPageUrl(recommendedMovieId)}">Read reviews for {recommendedMovieId}</a></p>
     """
-
-def listToCommaString(list):
-    return ', '.join(list)
