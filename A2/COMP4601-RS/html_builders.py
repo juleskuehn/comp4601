@@ -56,7 +56,7 @@ def pageWithAds(pageName, advertisingContent):
         <iframe frameBorder="0" src="{buildPageUrl(pageName)}"></iframe>
       </div>
       <div id="advertising">{advertisingContent}</div>
-    < / div > """
+    </div>"""
     
 def tablePage(title, headers, rows):  
   return f"""
