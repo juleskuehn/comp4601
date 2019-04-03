@@ -12,7 +12,7 @@ Winter 2019
 General testing instructions:
 
 Must have Python installed (tested with Python 3.x)
-Required Python dependencies: pandas, pickle, numpy, flask
+Required Python dependencies: pandas, numpy, flask
 
 
 Server testing Instructions:
@@ -29,3 +29,11 @@ Navigate to the LDA directory
 Add the "pages" folder from the assignment 2 archive
 Run `python lda.py`
 New movieTopicDict.pkl and topicWordsDict.pkl files will be generated
+
+
+User profile generation testing instructions:
+
+Navigate to the user_profiles directory
+Add the "reviews" folder from the assignment 2 archive
+Run step_1 ... step_4 python files.
+New .pkl and .txt files will be generated.

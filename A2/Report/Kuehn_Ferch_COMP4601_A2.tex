@@ -173,7 +173,7 @@ $p_{i}$ : position of user with ID $i$ in 2d ratings space
 
 $U$ : set of IDs for $k$ nearest neighbours of new user\newline
 
-The movies that we recommend for the new user are the "recommended movies" (described in previous section) for their computed community. The same system can be used for advertising as before.\newline
+Then, we simply assign the user to the closest cluster center previously identified by k-means. The list of movies (pages) that we recommend for the new user are the "recommended movies" (described in previous section) for their computed community, and the same system can be used for advertising as before.\newline
 
 We could also modify our advertising system to take advantage of the social graph wholesale. Instead of creating ratings communities, we take the users with close social proximity, and calculate "recommended movies" for this neighbourhood. Recommended movies for a user's neighbourhood are those predominantly rated greater than or equal to the user average by a user's $k$ nearest neighbours in the social graph.\newline
 
