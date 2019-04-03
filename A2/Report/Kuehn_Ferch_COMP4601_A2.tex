@@ -116,13 +116,10 @@ We could create some approximation of genre for each movie by extracting topics 
     \item For each page, we take the topic with the maximum distribution value and call this the movie's topic.
 \end{enumerate}
 
-Tinkering with the parameters of LDA iteratively led us to topics that progressively came closer to mimicking genre.
+Tinkering with the parameters of LDA iteratively led us to topics that progressively came closer to mimicking genre.\newline
 
 We strived to keep our distributions fairly biased to one topic since only the max was considered. Four topics
-ended up being the sweet spot that gave us this behavior.
-
-Stop words were added at each iteration as they appeared in the generated topics. In addition to conventional stop words,
-topic words that were too general and not indicative of genre like "movie" or "film" were added.
+ended up being the sweet spot that gave us this behavior.\newline
 
 \begin{figure}[h!]
     \centering
@@ -138,6 +135,8 @@ topic words that were too general and not indicative of genre like "movie" or "f
     \end{minipage}
 \end{figure}
 
+Stop words were added at each iteration as they appeared in the generated topics. In addition to conventional stop words,
+topic words that were too general and not indicative of genre like "movie" or "film" were added. \newline
 
 \section{Generating and retrieving contextual advertisements}
 
@@ -162,7 +161,23 @@ An advertisement is generated for a specific \{user/page\} by:
 
 \section{SUGGEST algorithm}
 
-...
+We are given a social graph connecting a new user (with no reviews) to other users, who we are assuming have reviews. The goal of our suggest algorithm is to position the new user in the 2d ratings space based on users who are close in the social graph. We can then associate the new user with a particular community (the closest cluster center to this user in 2d).\newline
+
+A directly connected user is said to have $d = 0$ while a user with one degree of separation on the social graph has $d = 1$ and so on. The maximal degree we consider can be set by experimentation. Users with closer degree have increased weight in the calculation of the new user's position:
+
+\[
+    p_{new} = \frac{\sum_{i\in U}\frac{p_{i}}{d_{i}+1}}{\sum_{i=1}^{k}\frac{1}{d_{i}+1}}
+\]
+
+$p_{i}$ : position of user with ID $i$ in 2d ratings space
+
+$U$ : set of IDs for $k$ nearest neighbours of new user\newline
+
+The movies that we recommend for the new user are the "recommended movies" (described in previous section) for their computed community. The same system can be used for advertising as before.\newline
+
+We could also modify our advertising system to take advantage of the social graph wholesale. Instead of creating ratings communities, we take the users with close social proximity, and calculate "recommended movies" for this neighbourhood. Recommended movies for a user's neighbourhood are those predominantly rated greater than or equal to the user average by a user's $k$ nearest neighbours in the social graph.\newline
+
+A combination of the two approaches - closeness in rating behaviour and closeness in social graph - may provide the best results. Once a new user add their first rating, their 2d ratings representation should be updated right away. In the short term, we will use previously calculated (and now out-of-date) movie and user averages to fill and normalize the new user's ratings and fold this data into the existing SVD. We would make a full rebuild of the truncated SVD model periodically.
 
 
 \section{Improvements}
@@ -175,8 +190,8 @@ Different techniques could be tried for creating lower-dimensional representatio
 
 The helpfulness of a review, or the average helpfulness rating for a user, could be used to give increased weight to high quality reviews.\newline
 
-Improvements can be made to the cleaning and parsing of the HTML. We noticed that there were duplicate reviews in the dataset corresponding to duplicate pages (movies which have the same reviews, but different IDs). These should ultimately be removed from the dataset before processing. The reviews HTML also included the title of each review, which should be included in the text used for LDA topic categorization.\newline.
+Improvements can be made to the cleaning and parsing of the HTML. We noticed that there were duplicate reviews in the dataset corresponding to duplicate pages (movies which have the same reviews, but different IDs). These should ultimately be removed from the dataset before processing. The reviews HTML also included the title of each review, which should be included in the text used for LDA topic categorization.\newline
 
-Experimentation with different stopwords may also lead to better results in the LDA process. The categorization process could be enhanced by creating document vectors for each of the pages (a concatenation of movie reviews, ideally augmented with the review titles). In the same format, we would create document vectors for reviews of movies for which we know the category, and train a neural net on this latter set. Our pages would then be predicted to a known category, which would likely provide a more meaningful categorization than the unsupervised bag-of-words approach we took for the assignment.
+Experimentation with different stopwords may also lead to better results in the LDA process. Another approach to the categorization process begins with creating document vectors for each of the pages (a concatenation of movie reviews, ideally augmented with the review titles). In the same format, we would create document vectors for reviews of movies for which we know the category, and train a neural net on this latter set. Our pages would then be predicted to a known category, which would likely provide a more meaningful categorization than the unsupervised bag-of-words approach we took for the assignment.
 
 \end{document}
