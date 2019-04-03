@@ -125,7 +125,8 @@ public class LuceneFacade {
         Document luceneDoc = new Document();
         
         StoredField tfUrl = new StoredField("url", mongoDoc.getString("url"));
-        StoredField tfDocId = new StoredField("docId", mongoDoc.getInteger("_id"));
+        StoredField sfDocId = new StoredField("docId", mongoDoc.getInteger("_id"));
+        TextField tfDocId = new TextField("docId", new StringReader(Integer.toString(mongoDoc.getInteger("_id"))));
         TextField tfI1 = new TextField("i", new StringReader("Jules Kuehn and Brian Ferch"));
         StoredField tfI2 = new StoredField("i", "Jules Kuehn and Brian Ferch");
         StoredField tfDate = new StoredField("date", ((Date) mongoDoc.get("crawltime")).getTime());
@@ -155,14 +156,17 @@ public class LuceneFacade {
         	tfContent.setBoost(pageRank);
         	tfI1.setBoost(pageRank);
         	tfType2.setBoost(pageRank);
+        	tfDocId.setBoost(pageRank);
         } else {
         	tfContent.setBoost(1);
         	tfI1.setBoost(1);
         	tfType2.setBoost(1);
+        	tfDocId.setBoost(1);
         }
         
         luceneDoc.add(tfContent);
         luceneDoc.add(tfUrl);
+        luceneDoc.add(sfDocId);
         luceneDoc.add(tfDocId);
         luceneDoc.add(tfI1);
         luceneDoc.add(tfI2);
