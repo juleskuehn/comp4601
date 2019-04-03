@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from pyspark import SparkContext
 from pyspark.sql import SparkSession, Row
 from pyspark.ml.clustering import LDA
