@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from pycorenlp import StanfordCoreNLP
 from bs4 import BeautifulSoup
 import numpy as np

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask import Flask
 from dao import *
 from html_builders import *
