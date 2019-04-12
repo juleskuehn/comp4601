@@ -1,0 +1,11 @@
+﻿.ipynb_checkpoints
+__pycache__
+
+config.py
+nohup.out
+
+*.bin
+*.csv
+
+.idea/
+
