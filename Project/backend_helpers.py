@@ -233,3 +233,28 @@ def plots(crawler, show_images=True, show_graph=True, layout='spring', num_users
             ax_image.axis('off')
             
         plt.show()
+
+
+def get_ranked_nodes(crawler):
+    # Limit visualization to only popular users
+    graph = crawler.graph
+    ranks = nx.pagerank(graph)
+    ranked = list(sorted(ranks, key=ranks.get, reverse=True))
+    # print(ranked)
+    return ranked
+
+
+def batch_sentiment(tweets):
+    for user_id in tweets:
+        sentiments = []
+        for tweet in tweets[user_id]['tweets']:
+            sentiment(tweet)
+        tweets[user_id]['sentiments'] = sentiments
+        print("user_id", user_id, "avg sentiment:", np.average([s['compound'] for s in sentiments]))
+        del tweets[user_id]['tweets']
+    return tweets
+
+
+
+# NEWER CODE IS ON COLAB:
+# https://colab.research.google.com/drive/18_LHfXRtiGl6GhKCwuugi0DnNup70vhJ
