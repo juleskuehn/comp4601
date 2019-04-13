@@ -24,3 +24,5 @@ hs_err_pid*
 
 # Python Cache
 __pycache__
+
+node_modules

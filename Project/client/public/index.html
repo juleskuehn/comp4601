@@ -1,0 +1,44 @@
+<!-- Web app entry point -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>COMP4601 Project Graph</title>
+
+  <!-- Load D3.js -->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+
+  <!-- Load pretty google fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+
+  <!-- Base styles -->
+  <style media="screen">
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      overflow: hidden;
+      font-family: Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      background-color: #ffffff;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    text {
+      font-family: sans-serif;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Load app script -->
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>
