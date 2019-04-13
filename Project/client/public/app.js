@@ -64,7 +64,7 @@ d3.json("graph.json", function (error, graph) {
 
   graph.nodes.forEach(function (node) {
     nodeById.set(node.id, node);
-    node.size = node.followers.length.map(0, 5, 1, 100);
+    node.size = node.followers.length.map(0, 5, 1, 10);
   });
 
   links.forEach(function (link) {
