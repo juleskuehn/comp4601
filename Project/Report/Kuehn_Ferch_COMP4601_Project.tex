@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}
+\documentclass[11pt]{article}
 \usepackage{fullpage,amsmath,mathtools, algorithm2e, forest}
 \usepackage[mathletters]{ucs}
 \usepackage{hyperref}
@@ -56,9 +56,9 @@ The project scope consists of crawling the social graph, gathering tweets for ea
 
 \section{Introduction}
 
-A 2015 paper by Tsugawa and Ohsaki[1] found that "negative messages are likely to be reposted more rapidly and frequently than positive and neutral messages". We did not investigate retweets but rather sought to answer whether sentiment spreads more generally between users. This could confirm and expand on the results of that paper, or simply provide some useful insight into demonstrating the folk wisdom “misery loves company”: that negative sentiment is contagious.\newline
+A 2015 paper by Tsugawa and Ohsaki[1] found that "negative messages are likely to be reposted more rapidly and frequently than positive and neutral messages". We did not investigate retweets but rather sought to answer whether sentiment spreads more generally between users. This could confirm and expand on the results of that paper, or simply provide some useful insight into the folk wisdom “misery loves company”: that negative sentiment is contagious.\newline
 
-In lieu of any substantial statistical analysis, we visualize the results on an animated graph, allowing for us to explore the data interactively and spot trends.\newline
+In lieu of any substantial statistical analysis, we visualized the results on an animated graph, allowing for us to explore the data interactively and spot trends.\newline
 
 We will begin with a general overview of the data sources and technologies used and a review of related work. Then we will discuss the specifics of our implementation, and results obtained.
 
@@ -68,7 +68,8 @@ We will begin with a general overview of the data sources and technologies used 
 Twitter offers a free rate-limited API[2] which allows us to retrieve the required raw data from queries on a screen name or user id:
 \begin{enumerate}
     \item \textbf{userId} : a large integer, ex. 946341920036478976 for our seed user
-    \item \textbf{tweets} : most recent $\geq$ 3200 tweets for this user consisting of $[(time_1, text_1), (time_2, text_2), \dots]$ 
+    \item \textbf{tweets} : most recent $\leq$ 3200 tweets for this user consisting of\newline
+    $[(time_1, text_1), (time_2, text_2), \dots]$ 
     \item \textbf{followers} : $[userId_1, userId_2, \dots]$
 \end{enumerate}
 
@@ -80,11 +81,7 @@ Based on visual analysis of the data, cleaning was performed programatically. Th
     \item \textbf{users} : information for specific users such as average sentiment, number of tweets, and followers. $\{userId: userInfo, \dots\}$
 \end{enumerate}
 
-This data was then displayed as a graph in JavaScript using the d3.js library[5]. Sentiment is then animated on each node by the timestamps of tweets. Some smoothing (rolling window averages) is selectively applied to the data to aid in spotting trends at different time granularity.
-
-
-\section{Related work}
-Projects with similar scope, or technologies related to the implementation of your solution. Briefly mention the projects and their relation to your report, and annotate appropriately.
+This data was then displayed as a graph in JavaScript using the d3.js library[5]. Tweet sentiment is then animated over time, as changing color on each node where green is positive sentiment and red is negative. Some smoothing (rolling window averages) is selectively applied to the data to aid in spotting trends at different time granularities.
 
 
 \section{Methodology}
@@ -95,20 +92,20 @@ Although a historical archive of Twitter data may have been sufficient for our p
 
 \subsubsection{Tools employed}
 
-Cloud services were used heavily in the processing of this data. The data acquisition and processing was all performed on Google Colaboratory[x]'s free computing instances, storing temporary data on a mounted Google Drive for persistence. This allowed us to offload tasks which required substantial network activity, processing time, and storage. Processed results were periodically stored between intermediary steps in either Python's native 'pickle' format, or JSON and CSV formats.\newline
+Cloud services were used heavily in the processing of this data. The data acquisition and processing was all performed on Google Colaboratory[x]'s free computing instances, with temporary data stored on a mounted Google Drive for persistence. This allowed us to offload tasks to the cloud which required substantial network activity, processing time, and storage. Processed data was ultimately provided to the visualization client in JSON and CSV formats.\newline
 
-We leaned heavily on Python libraries for specific tasks:
+We relied on several Python libraries for specific tasks:
 \begin{itemize}
     \item \textbf{Tweepy} for calling the Twitter API
     \item \textbf{nxGraph} for creating a user graph and performing page rank
     \item \textbf{VADER} for analyzing tweet sentiment
     \item \textbf{matplotlib} for inspecting the data while cleaning
-    \item \textbf{numpy} for general processing tasks
+    \item \textbf{numpy} for numerical processing and matrix manipulation
 \end{itemize}
 
-The above are all standard tools for these uses in Python, but let's explain why we chose VADER. Unlike mainstream libraries such as CoreNLP[x], VADER is specially tuned to analyse social media text. It is able to recognize emoticons such as :) and Unicode emoji[x], and also takes capitalization and punctionation such as ALLCAPS!!! into account for sentiment analysis.\newline
+Most of the above are standard tools for these uses in Python. For the crucial task of sentiment analysis, we chose VADER becaus unlike mainstream libraries such as CoreNLP[x], VADER is specially tuned to analyse social media text. It is able to recognize emoticons such as :) and Unicode emoji[x], and also takes capitalization and punctionation such as ALLCAPS!!! into account for sentiment analysis.\newline
 
-Twitter's free API was sufficient for extracting 400 users and up to 3200 tweets each. (Rate-limiting made it impossible to achieve a larger crawl in the time-frame we had.) Google Translate's free API was however insufficient due to both rate limiting and trouble decoding Unicode emoji. Google's commercial Cloud Translate service was up to the task, although rate limits had to be manually increased to 10 million characters per 100 minutes.\newline
+Twitter's free API was sufficient for extracting 400 users and up to 3200 tweets each. (Rate-limiting made it impossible to achieve a larger crawl in the time-frame we had.) Google Translate's free API was however insufficient due to both rate limiting and issues decoding Unicode emoji. Google's commercial Cloud Translate service was up to the task, after rate limits were manually increased to 10 million characters per 100 minutes.\newline
 
 \subsubsection{Methodology}
 
@@ -146,16 +143,16 @@ As our visualization is time based, we want to make sure we have sufficient twee
 \end{figure}
 
 The time granularity of this data was very fine (by second) at this point, making it unsuitable for animation over several years. To compensate for this, and to smooth sentiment values for more useful visualization, we employed several rolling window averages:\newline
-\begin{enumerate}
+\begin{itemize}
     \item 3 day window, 1 day step (length: 1199)
     \item 1 week window, 3 day step (length: 400)
     \item 2 week window, 3 day step (length: 400)
     \item 4 week window, 3 day step (length: 400)
-\end{enumerate}
+\end{itemize}
 
 Users who did not make any tweets in that time window are not given an average sentiment for that window.\newline
 
-To better understand the data, we graphed the averages for each of these windows. We can see that increasing the window size shows less granular trends over months while the smallest window size shows more granular trends over weeks and even days (see Figures X-X).
+To better understand the data, we plotted the averages for each of these windows. We can see that increasing the window size shows less granular trends over months while the smallest window size shows more granular trends over weeks and even days (see Figures X-X).
 
 \begin{figure}[h!]
     \centering
@@ -170,18 +167,49 @@ To better understand the data, we graphed the averages for each of these windows
 \end{figure}
 
 \subsection{Visualization}
+Add this \dots\newline
+
+Include figures of some sentiment bouncing around a local community over adjacent time window, confirming 2nd paragraph of Discussion below. I can do figures syntax
+
+\subsubsection{Tools employed}
+node, d3.js
+
+\subsubsection{Methodology}
+force directed graph\newline
+
+how data was processed from what i provided
 
 
 \section{Discussion}
-This is the opportunity to showcase analysis or resulting benefits from your project implementation. Without getting into Future Work too much, briefly discuss what setbacks and desires your project implementation experience has left you with. Other than that not much advice on discussion; varies by project scope. 
+The windowed averages shown in Figures X-X demonstrate that sentiment trends have definitely been captured in the data. We can infer that certain historical events caused certain shifts in overall sentiment by looking at the dates, and also see different users react to those events in terms of change in their sentiment.\newline
+
+Close visual inspection of clusters over time indicates that there is some relationship between adjacent users' average sentiments (see Figure X-X). Specifically, changes in the sentiment of adjacent users often occurs sequentially over a few windows. Since there are bidirectional relationships present, it is difficult to make a strong judgement on our initial hypothesis: that (negative) sentiment spreads between socially adjacent users over time, that is, directional relationships.\newline
+
+We can see that certain sentiments appear in certain socially adjacent groups around the same time, independently of the overall average sentiment. This implies that you are more likely to share sentiment over a window of time with those in your close social community than with random other users, and that the community, even sampled from a single seed, is heterogenous while still showing clear overall trends.\newline
+
+As previously mentioned, Twitter rate limits and limitations on our own time were causes of difficulty, along with text encoding issues in translation. But the various APIs and cloud services employed delivered a usable data set for a viable proof-of-concept implementation, and a glimpse at what results might appear with a more comprehensive approach to this problem.
 
 
 \section{Future work}
-Discuss possibilities of future work, for example in terms of 1) what would you consider implementing given more time on this project and 2) how can this project be used by or furthered by the open source community to improve future works?
+The work could be improved with better data (more seeds), in the same format. Some other useful information to graph might be the language of the users, such that communities of different language, and the links between them, can be visualized. Translated tweets should also be stored, rather than discarded after scoring sentiment. Scored tweets from a user over a particular time window could be displayed when hovering on that node. User screen names and profile images could also appear in this card.\newline
+
+With the data already gathered, there is more that could be displayed. Particularly negative sentiment tweets could be identified around a sudden drop in average sentiment in order to identify the likely cause of the negative sentiment. Community identification could be inferred from tweet text using document vectors etc., by social proximity, or by sentiment over time. For the latter method, we think of the users as 'rating' a period in time (the rolling window). Then, their sentiments can be represented as a ratings matrix and SVD dimensionality reduction, clustering etc. could be performed.\newline
+
+Community improvements to the visualization component are possible on GitHub Since the data processing scripts are both available and runnable in Google Colaboratory, different datasets can be gathered and then visualized.
 
 
 \section{Conclusion}
-Summarize the content of the report with a focus on the goal, analysis, and resulting value. Recap relevant points from the discussion, but do not restate it. Finally, you can choose to touch on future works as you close out the paper.
+Summarize the content of the report with a focus on the goal, analysis, and resulting value. Recap relevant points from the discussion, but do not restate it. Finally, you can choose to touch on future works as you close out the paper.\newline
+
+We began with a goal of confirming whether indeed “misery loves company” on Twitter, and specifically if sentiment shows a directed movement across the Twitter social graph.\newline
+
+We visualized tweet sentiment over time for 400 users crawled from a single seed user. We binned 396,937 tweets from 2016-01-01 to 2019-04-13 into rolling averages over time windows, at different granularity of window size and step. By visual inspection, we found certain patterns which both addressed our goal for the analysis, and provided additional insights into communities on Twitter.\newline
+
+Related to our goal, we found that change in the sentiment of adjacent users does tend to occur at similar times, and in sequence rather than in parallel. However, we could not confirm a directional relationship within the graph, as would be required to show that negative sentiment is spreading directionally. In reality, the sources of change in user sentiment are probably too complex to be modeled in this kind of causal relationship, and it would be surprising to see a strong demonstration of this in a random sample of the social graph.\newline
+
+Additionally, we found that certain socially-close communities of sentiment-over-time emerge, distinct from overall sentiment. Overall sentiment also showed a distinct trend, and based on the dates we can infer relationships to world events. Future work could better explore sources of negative sentiment.\newline
+
+We found that visualizing sentiment over the Twitter user graph is illuminating and compelling. By publishing an example of crawling and processing code on Google Colaboratory, others can gather larger datasets, perhaps ones focusing on specific communities. By publishing our visualization code on GitHub, we provide a full solution for visualizing sentiment on parts of the social graph which are of interest to the user with minimal fuss.
 
 \appendix
 \section{\\Figures and tables}
