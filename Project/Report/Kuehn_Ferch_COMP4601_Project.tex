@@ -48,7 +48,6 @@ Student Name: Jules Kuehn\\
 
 
 \section{Abstract}
-\textbf (100-150 words) Describe main problem statement, goal, and scope of your project.\newline
 
 We investigate tweet sentiment over time for 400 socially connected Twitter users by dynamically visualizing changes in tweet sentiment for roughly 400,000 tweets from 2016 to present.\newline
 
@@ -56,7 +55,6 @@ The project scope consists of crawling the social graph, gathering tweets for ea
 
 
 \section{Introduction}
-Explain motivation for the project and briefly foreshadow your report, then introduce sections.\newline
 
 A 2015 paper by Tsugawa and Ohsaki[1] found that "negative messages are likely to be reposted more rapidly and frequently than positive and neutral messages". We did not investigate retweets but rather sought to answer whether sentiment spreads more generally between users. This could confirm and expand on the results of that paper, or simply provide some useful insight into demonstrating the folk wisdom “misery loves company”: that negative sentiment is contagious.\newline
 
@@ -65,8 +63,7 @@ In lieu of any substantial statistical analysis, we visualize the results on an 
 We will begin with a general overview of the data sources and technologies used and a review of related work. Then we will discuss the specifics of our implementation, and results obtained.
 
 
-\section{Background}
-Describe contextual knowledge a reader would require in order to comfortably understand your project report (ex. your data sources, libraries used, technologies discussed).\newline
+\section{Project overview}
 
 Twitter offers a free rate-limited API[2] which allows us to retrieve the required raw data from queries on a screen name or user id:
 \begin{enumerate}
@@ -89,8 +86,8 @@ This data was then displayed as a graph in JavaScript using the d3.js library[5]
 \section{Related work}
 Projects with similar scope, or technologies related to the implementation of your solution. Briefly mention the projects and their relation to your report, and annotate appropriately.
 
+
 \section{Methodology}
-Explain implementation decisions and details. Be specific but concise, referencing information about sources when required to explain functionality. What were your goals? Why did you implement the way you did - and how did you?\newline
 
 \subsection{Data acquisition and processing}
 
@@ -129,10 +126,10 @@ We then roughly followed the tutorial "(Almost) Real-Time Twitter Sentiment Anal
 The raw sentiment values of all tweets over time is shown in Figure 1. Manual inspection of zero-sentiment tweets showed that many were of low quality (tweets which were simply URLs, stripped characters, or poorly translated). Therefore, the zero-sentiment tweets were removed. The non-zero average for each user was then subtracted from each of that user's sentiments $s$:
 
 \[
-    s_{new} = s_{raw} - avg(s\in userTweets, s \neq 0)
+    s_{new} = s_{raw} - avg(s\in tweets_{user}, s \neq 0)
 \]
 
-As our visualization is time based, we want to make sure we have sufficient tweet density for a useful visualization at a given time. Inspecting the timestamps of the tweets showed that less than 10\% of gathered tweets occured between 2009 and 2016 (see Figure X). The processed \textbf{tweets} list now consists only of non-neutral tweets from January 1, 2016 to the crawl date April 13, 2019, with sentiment scores normalized by user average.
+As our visualization is time based, we want to make sure we have sufficient tweet density for a useful visualization at a given time. Inspecting the timestamps of the tweets showed that less than 10\% of gathered tweets occured between 2009 and 2016 (see Figure X). The processed \textbf{tweets} list now consists only of non-neutral tweets from January 1, 2016 to the crawl date April 13, 2019, with sentiment scores normalized by user average. We are left with 61.6\% of the total tweets gathered, but de-noised and with sentiment value somewhat exagerrated, making it easier to visualize change in sentiment.
 
 \begin{figure}[h!]
     \centering
@@ -148,14 +145,40 @@ As our visualization is time based, we want to make sure we have sufficient twee
     \end{minipage}
 \end{figure}
 
+The time granularity of this data was very fine (by second) at this point, making it unsuitable for animation over several years. To compensate for this, and to smooth sentiment values for more useful visualization, we employed several rolling window averages:\newline
+\begin{enumerate}
+    \item 3 day window, 1 day step (length: 1199)
+    \item 1 week window, 3 day step (length: 400)
+    \item 2 week window, 3 day step (length: 400)
+    \item 4 week window, 3 day step (length: 400)
+\end{enumerate}
+
+Users who did not make any tweets in that time window are not given an average sentiment for that window.\newline
+
+To better understand the data, we graphed the averages for each of these windows. We can see that increasing the window size shows less granular trends over months while the smallest window size shows more granular trends over weeks and even days (see Figures X-X).
+
+\begin{figure}[h!]
+    \centering
+     \includegraphics[width=0.8\textwidth]{avg_sentiment_over_time_big__3day}
+        \caption{Average tweet sentiment for all users, 3 day rolling window}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+     \includegraphics[width=0.8\textwidth]{avg_sentiment_over_time_big_4week}
+        \caption{Average tweet sentiment for all users, 4 week rolling window}
+\end{figure}
 
 \subsection{Visualization}
+
 
 \section{Discussion}
 This is the opportunity to showcase analysis or resulting benefits from your project implementation. Without getting into Future Work too much, briefly discuss what setbacks and desires your project implementation experience has left you with. Other than that not much advice on discussion; varies by project scope. 
 
+
 \section{Future work}
 Discuss possibilities of future work, for example in terms of 1) what would you consider implementing given more time on this project and 2) how can this project be used by or furthered by the open source community to improve future works?
+
 
 \section{Conclusion}
 Summarize the content of the report with a focus on the goal, analysis, and resulting value. Recap relevant points from the discussion, but do not restate it. Finally, you can choose to touch on future works as you close out the paper.
