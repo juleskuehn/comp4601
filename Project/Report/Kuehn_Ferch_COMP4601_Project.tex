@@ -56,7 +56,7 @@ The project scope consists of crawling the social graph, gathering tweets for ea
 
 \section{Introduction}
 
-A 2015 paper by Tsugawa and Ohsaki[1] found that "negative messages are likely to be reposted more rapidly and frequently than positive and neutral messages". We did not investigate retweets but rather sought to answer whether sentiment spreads more generally between users. This could confirm and expand on the results of that paper, or simply provide some useful insight into the folk wisdom “misery loves company”: that negative sentiment is contagious.\newline
+A 2015 paper by Tsugawa and Ohsaki[4] found that "negative messages are likely to be reposted more rapidly and frequently than positive and neutral messages". We did not investigate retweets but rather sought to answer whether sentiment spreads more generally between users. This could confirm and expand on the results of that paper, or simply provide some useful insight into the folk wisdom “misery loves company”: that negative sentiment is contagious.\newline
 
 In lieu of any substantial statistical analysis, we visualized the results on an animated graph, allowing for us to explore the data interactively and spot trends.\newline
 
@@ -65,7 +65,7 @@ We will begin with a general overview of the data sources and technologies used 
 
 \section{Project overview}
 
-Twitter offers a free rate-limited API[2] which allows us to retrieve the required raw data from queries on a screen name or user id:
+Twitter offers a free rate-limited API which allows us to retrieve the required raw data from queries on a screen name or user id:
 \begin{enumerate}
     \item \textbf{userId} : a large integer, ex. 946341920036478976 for our seed user
     \item \textbf{tweets} : most recent $\leq$ 3200 tweets for this user consisting of\newline
@@ -73,7 +73,7 @@ Twitter offers a free rate-limited API[2] which allows us to retrieve the requir
     \item \textbf{followers} : $[userId_1, userId_2, \dots]$
 \end{enumerate}
 
-Many of the gathered users had predominantly non-English tweets. In order to run sentiment analysis with VADER (Valence Aware Dictionary and sEntiment Reasoner)[https://github.com/cjhutto/vaderSentiment] we first had to translate all tweets to English. This was accomplished using Google Cloud Translate[4], a commercial service.\newline
+Many of the gathered users had predominantly non-English tweets. In order to run sentiment analysis with VADER (Valence Aware Dictionary and sEntiment Reasoner)[1] we first had to translate all tweets to English. This was accomplished using Google Cloud Translate, a commercial service.\newline
 
 Based on visual analysis of the data, cleaning was performed programatically. This yielded several datasets usable by the client:
 \begin{enumerate}
@@ -81,7 +81,7 @@ Based on visual analysis of the data, cleaning was performed programatically. Th
     \item \textbf{users} : information for specific users such as average sentiment, number of tweets, and followers. $\{userId: userInfo, \dots\}$
 \end{enumerate}
 
-This data was then displayed as a graph in JavaScript using the d3.js library[5]. Tweet sentiment is then animated over time, as changing color on each node where green is positive sentiment and red is negative. Some smoothing (rolling window averages) is selectively applied to the data to aid in spotting trends at different time granularities.
+This data was then displayed as a graph in JavaScript using the d3.js library. Tweet sentiment is then animated over time, as changing color on each node where green is positive sentiment and red is negative. Some smoothing (rolling window averages) is selectively applied to the data to aid in spotting trends at different time granularities.
 
 
 \section{Methodology}
@@ -92,7 +92,7 @@ Although a historical archive of Twitter data may have been sufficient for our p
 
 \subsubsection{Tools employed}
 
-Cloud services were used heavily in the processing of this data. The data acquisition and processing was all performed on Google Colaboratory[x]'s free computing instances, with temporary data stored on a mounted Google Drive for persistence. This allowed us to offload tasks to the cloud which required substantial network activity, processing time, and storage. Processed data was ultimately provided to the visualization client in JSON and CSV formats.\newline
+Cloud services were used heavily in the processing of this data. The data acquisition and processing was all performed on Google Colaboratory's free computing instances, with temporary data stored on a mounted Google Drive for persistence. This allowed us to offload tasks to the cloud which required substantial network activity, processing time, and storage. Processed data was ultimately provided to the visualization client in JSON and CSV formats.\newline
 
 We relied on several Python libraries for specific tasks:
 \begin{itemize}
@@ -103,21 +103,21 @@ We relied on several Python libraries for specific tasks:
     \item \textbf{numpy} for numerical processing and matrix manipulation
 \end{itemize}
 
-Most of the above are standard tools for these uses in Python. For the crucial task of sentiment analysis, we chose VADER becaus unlike mainstream libraries such as CoreNLP[x], VADER is specially tuned to analyse social media text. It is able to recognize emoticons such as :) and Unicode emoji[x], and also takes capitalization and punctionation such as ALLCAPS!!! into account for sentiment analysis.\newline
+Most of the above are standard tools for these uses in Python. For the crucial task of sentiment analysis, we chose VADER becaus unlike mainstream libraries such as CoreNLP, VADER is specially tuned to analyse social media text. It is able to recognize emoticons such as :) and Unicode emoji, and also takes capitalization and punctionation such as ALLCAPS!!! into account for sentiment analysis.\newline
 
 Twitter's free API was sufficient for extracting 400 users and up to 3200 tweets each. (Rate-limiting made it impossible to achieve a larger crawl in the time-frame we had.) Google Translate's free API was however insufficient due to both rate limiting and issues decoding Unicode emoji. Google's commercial Cloud Translate service was up to the task, after rate limits were manually increased to 10 million characters per 100 minutes.\newline
 
 \subsubsection{Methodology}
 
-\textbf{Seed user:} First, we identified a seed node. After some experimentation with using popular celebrity accounts as seed nodes, quick inspection of the resultant graph showed that it was too broad and not deep enough for the desired visualization. We found that using a normal, less popular user resulted in a graph better conforming to our intent (See Figure X). This user was selected by browsing followers of the City of Ottawa account. Our seed user[x] is local to Ottawa, and has only 2 tweets and 13 followers. (In retrospect, a user with more moderate activity (hundreds of tweets, dozens of followers) would have likely produced better results.)\newline
+\textbf{Seed user:} First, we identified a seed node. After some experimentation with using popular celebrity accounts as seed nodes, quick inspection of the resultant graph showed that it was too broad and not deep enough for the desired visualization. We found that using a normal, less popular user resulted in a graph better conforming to our intent (See Figure X). This user was selected by browsing followers of the City of Ottawa account. Our seed user is local to Ottawa, and has only 2 tweets and 13 followers. (In retrospect, a user with more moderate activity (hundreds of tweets, dozens of followers) would have likely produced better results.)\newline
 
-\textbf{Building a graph:} Crawling the user graph had already been implemented simply in Python by Yuya Takashina's twicrawler[\url{https://github.com/ytakashina/twicrawler}]. We used this as base code, making modifications to crawl 'forward' through a potential chain of influence by adding a seed user's followers to a priority queue. The priority was determined by the PageRank score of that user's node in the partially acquired social graph. The aim was to process more popular users first, as we assumed these users would be of higher quality and influence.
+\textbf{Building a graph:} Crawling the user graph had already been implemented simply in Python by Yuya Takashina's twicrawler[3]. We used this as base code, making modifications to crawl 'forward' through a potential chain of influence by adding a seed user's followers to a priority queue. The priority was determined by the PageRank score of that user's node in the partially acquired social graph. The aim was to process more popular users first, as we assumed these users would be of higher quality and influence.
 
 From this graph of user nodes, we removed all but the 400 highest page-ranked nodes.\newline
 
-\textbf{Getting tweets:} Then, for each of the 400 user nodes, we retrieved the last 3200 tweets from each user using Tweepy based on an existing script[\url{https://github.com/dpzmick/one-liners/blob/master/tweet_dumper.py}]. This retrieved the tweets in batches of 200. We frequently ran into rate-limiting and had to run the script at intervals on appropriately sized mini-batches of users.\newline
+\textbf{Getting tweets:} Then, for each of the 400 user nodes, we retrieved the last 3200 tweets from each user using Tweepy based on an existing script[5]. This retrieved the tweets in batches of 200. We frequently ran into rate-limiting and had to run the script at intervals on appropriately sized mini-batches of users.\newline
 
-We then roughly followed the tutorial "(Almost) Real-Time Twitter Sentiment Analysis with Tweep \& Vader"[\url{https://towardsdatascience.com/almost-real-time-twitter-sentiment-analysis-with-tweep-vader-f88ed5b93b1c}]. Tweets were cleaned of links, retweet handles, user handles, and special characters (leaving emoji). The tweets were sent in batches to Cloud Translate, and the translated text was analysed for sentiment with VADER, yielding positive, neutral, negative, and compound sentiment scores for each tweet. We wanted a single real number for our sentiment visualization, so we stored only the compound sentiment score along with each tweet.\newline
+We then roughly followed the tutorial "(Almost) Real-Time Twitter Sentiment Analysis with Tweep \& Vader"[2]. Tweets were cleaned of links, retweet handles, user handles, and special characters (leaving emoji). The tweets were sent in batches to Cloud Translate, and the translated text was analysed for sentiment with VADER, yielding positive, neutral, negative, and compound sentiment scores for each tweet. We wanted a single real number for our sentiment visualization, so we stored only the compound sentiment score along with each tweet.\newline
 
 \textbf{Inspecting and processing data:} We now have all $tweets$ for all users, sorted by time and scored with compount sentiment $[(time, userId, sentiment, text), \dots]$. We gather together some useful information on the users from the graph and tweets into $users$. This includes the followers of that user (nodes connected through out-edges on the graph), and the average sentiment scores. A second average is made of non-zero sentiments.\newline
 The raw sentiment values of all tweets over time is shown in Figure 1. Manual inspection of zero-sentiment tweets showed that many were of low quality (tweets which were simply URLs, stripped characters, or poorly translated). Therefore, the zero-sentiment tweets were removed. The non-zero average for each user was then subtracted from each of that user's sentiments $s$:
@@ -227,4 +227,16 @@ We found that visualizing sentiment over the Twitter user graph is illuminating 
 \end{figure}
 
 \section{\\References}
+
+[1] Hutto, C.J., and Eric Gilbert. “VADER: A Parsimonious Rule-Based Model for Sentiment Analysis of Social Media Text,” 2015.\newline
+
+[2] Rovai, Marcelo. “(Almost) Real-Time Twitter Sentiment Analysis with Tweep \& Vader.” Towards Data Science, December 27, 2018. https://towardsdatascience.com/almost-real-time-twitter-sentiment-analysis-with-tweep-vader-f88ed5b93b1c.\newline
+
+[3] Takashina, Yuya. Crawling the Social Graph on Twitter. Jupyter Notebook, 2017. https://github.com/ytakashina/twicrawler.\newline
+
+[4] Tsugawa, Sho, and Hiroyuki Ohsaki. “Negative Messages Spread Rapidly and Widely on Social Media,” 151–60, 2015. https://doi.org/10.1145/2817946.2817962.\newline
+
+[5] Zmick, David. tweet\_dumper.py. Python, 2019. https://github.com/dpzmick/one-liners.
+
+
 \end{document}

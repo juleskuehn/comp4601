@@ -303,11 +303,6 @@ INPUT c:/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm
 INPUT c:/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
 INPUT c:/texlive/2018/texmf-dist/tex/latex/base/omscmr.fd
 INPUT c:/texlive/2018/texmf-dist/tex/latex/base/omscmr.fd
-INPUT c:/texlive/2018/texmf-dist/tex/latex/psnfss/ot1pcr.fd
-INPUT c:/texlive/2018/texmf-dist/tex/latex/psnfss/ot1pcr.fd
-INPUT c:/texlive/2018/texmf-dist/fonts/tfm/adobe/courier/pcrr7t.tfm
-INPUT c:/texlive/2018/texmf-dist/fonts/vf/adobe/courier/pcrr7t.vf
-INPUT c:/texlive/2018/texmf-dist/fonts/tfm/adobe/courier/pcrr8r.tfm
 INPUT c:/Users/z/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/Project/Report/./images/raw_sentiments.png
 INPUT ./images/raw_sentiments.png
 INPUT ./images/raw_sentiments.png
@@ -329,7 +324,6 @@ INPUT ./images/tweets_since_year.png
 INPUT c:/Users/z/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/Project/Report/Kuehn_Ferch_COMP4601_Project.aux
 INPUT c:/Users/z/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/Project/Report/Kuehn_Ferch_COMP4601_Project.out
 INPUT c:/Users/z/Dropbox/Carleton/Winter 2019/COMP 4601/comp4601/Project/Report/Kuehn_Ferch_COMP4601_Project.out
-INPUT c:/texlive/2018/texmf-dist/fonts/enc/dvips/base/8r.enc
 INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
@@ -339,4 +333,3 @@ INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb
 INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb
 INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb
 INPUT c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
-INPUT c:/texlive/2018/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb

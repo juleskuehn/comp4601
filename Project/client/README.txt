@@ -9,7 +9,7 @@ Jules Kuehn
 100661464
 
 
-VISUALIZATION INSTRUCTIONS
+VISUALIZATION INSTRUCTIONS (easy)
 
 The cleaned data is provided and will be loaded into the graph.
 
@@ -26,7 +26,7 @@ TWITTER CRAWLING INSTRUCTIONS (hard)
 
 Python code running on Google Colaboratory servers.
     Running the code online will require signing in with a Google account.
-My Twitter API keys will allow connection to Twitter.
+My Twitter API keys will allow connection to Twitter, but with rate limits.
 Google Drive will require sign-in and for the folder 'comp4601' to be created at the root of your Google Drive.
 Google Cloud Translate API requires authorization keys to be added to the environment.
     These need to be obtained through the Google Cloud Platform (requires credit card, but free trial).
