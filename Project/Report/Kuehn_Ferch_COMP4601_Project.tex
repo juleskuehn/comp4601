@@ -14,7 +14,7 @@
 \begin{document}
 \title {
     Does misery love company?\\
-    Sentiment change over the Twitter social graph\\\\
+    Sentiment change over the Twitter social graph\newline\newline
     \large COMP 4601 - Project}
 \author{Student Name: Brian Ferch\\
 \text{Student Number: 100962115}\\\\ 
@@ -80,7 +80,7 @@ Many of the gathered users had predominantly non-English tweets. In order to run
 Based on visual analysis of the data, cleaning was performed programatically. This yielded several datasets usable by the client:
 \begin{enumerate}
     \item \textbf{tweets} : all tweets for all users, sorted by time $[(time, userId, sentiment, text), \dots]$
-    \item \textbf{userInfo} : information for specific users such as average sentiment, number of tweets, and followers.
+    \item \textbf{users} : information for specific users such as average sentiment, number of tweets, and followers. $\{userId: userInfo, \dots\}$
 \end{enumerate}
 
 This data was then displayed as a graph in JavaScript using the d3.js library[5]. Sentiment is then animated on each node by the timestamps of tweets. Some smoothing (rolling window averages) is selectively applied to the data to aid in spotting trends at different time granularity.
@@ -96,9 +96,9 @@ Explain implementation decisions and details. Be specific but concise, referenci
 
 Although a historical archive of Twitter data may have been sufficient for our purposes, we opted to acquire some data ourselves via Twitter's API.
 
-\subsubsection{Tools employed}\newline
+\subsubsection{Tools employed}
 
-Cloud services were used heavily in the processing of this data. The data acquisition and processing was all performed on Google Colaboratory[x]'s free computing instances, storing temporary data on a mounted Google Drive. This allowed us to offload tasks which required substantial network activity, processing time, and storage. Results were then downloaded and stored locally between intermediary steps in either Python's native 'pickle' format, or JSON and CSV formats.\newline
+Cloud services were used heavily in the processing of this data. The data acquisition and processing was all performed on Google Colaboratory[x]'s free computing instances, storing temporary data on a mounted Google Drive for persistence. This allowed us to offload tasks which required substantial network activity, processing time, and storage. Processed results were periodically stored between intermediary steps in either Python's native 'pickle' format, or JSON and CSV formats.\newline
 
 We leaned heavily on Python libraries for specific tasks:
 \begin{itemize}
@@ -113,20 +113,40 @@ The above are all standard tools for these uses in Python, but let's explain why
 
 Twitter's free API was sufficient for extracting 400 users and up to 3200 tweets each. (Rate-limiting made it impossible to achieve a larger crawl in the time-frame we had.) Google Translate's free API was however insufficient due to both rate limiting and trouble decoding Unicode emoji. Google's commercial Cloud Translate service was up to the task, although rate limits had to be manually increased to 10 million characters per 100 minutes.\newline
 
-\subsubsection{Methodology}\newline
+\subsubsection{Methodology}
 
-\textbf{SEED USER} First, we identified a seed node. After some experimentation with using popular celebrity accounts as seed nodes, quick inspection of the resultant graph showed that it was too broad and not deep enough for the desired visualization. We found that using a normal, less popular user resulted in a graph better conforming to our intent. This user was selected by browsing followers of the City of Ottawa account. Our seed user[x] is local to Ottawa, and has only 2 tweets and 13 followers. (In retrospect, a user with more moderate activity (hundreds of tweets, dozens of followers) would have likely produced better results.)\newline
+\textbf{Seed user:} First, we identified a seed node. After some experimentation with using popular celebrity accounts as seed nodes, quick inspection of the resultant graph showed that it was too broad and not deep enough for the desired visualization. We found that using a normal, less popular user resulted in a graph better conforming to our intent (See Figure X). This user was selected by browsing followers of the City of Ottawa account. Our seed user[x] is local to Ottawa, and has only 2 tweets and 13 followers. (In retrospect, a user with more moderate activity (hundreds of tweets, dozens of followers) would have likely produced better results.)\newline
 
-\textbf{BUILDING A GRAPH} Crawling the user graph had already been implemented simply in Python by Yuya Takashina's twicrawler[\url{https://github.com/ytakashina/twicrawler}]. We used this as base code, making modifications to crawl 'forward' through a potential chain of influence by adding a seed user's followers to a priority queue. The priority was determined by the PageRank score of that user's node in the partially acquired social graph. The aim was to process more popular users first, as we assumed these users would be of higher quality and influence.
+\textbf{Building a graph:} Crawling the user graph had already been implemented simply in Python by Yuya Takashina's twicrawler[\url{https://github.com/ytakashina/twicrawler}]. We used this as base code, making modifications to crawl 'forward' through a potential chain of influence by adding a seed user's followers to a priority queue. The priority was determined by the PageRank score of that user's node in the partially acquired social graph. The aim was to process more popular users first, as we assumed these users would be of higher quality and influence.
 
 From this graph of user nodes, we removed all but the 400 highest page-ranked nodes.\newline
 
-\textbf{GETTING TWEETS} Then, for each of the 400 user nodes, we retrieved the last 3200 tweets from each user using Tweepy based on an existing script[\url{https://github.com/dpzmick/one-liners/blob/master/tweet_dumper.py}]. This retrieved the tweets in batches of 200. We frequently ran into rate-limiting and had to run the script at intervals on appropriately sized mini-batches of users.\newline
+\textbf{Getting tweets:} Then, for each of the 400 user nodes, we retrieved the last 3200 tweets from each user using Tweepy based on an existing script[\url{https://github.com/dpzmick/one-liners/blob/master/tweet_dumper.py}]. This retrieved the tweets in batches of 200. We frequently ran into rate-limiting and had to run the script at intervals on appropriately sized mini-batches of users.\newline
 
 We then roughly followed the tutorial "(Almost) Real-Time Twitter Sentiment Analysis with Tweep \& Vader"[\url{https://towardsdatascience.com/almost-real-time-twitter-sentiment-analysis-with-tweep-vader-f88ed5b93b1c}]. Tweets were cleaned of links, retweet handles, user handles, and special characters (leaving emoji). The tweets were sent in batches to Cloud Translate, and the translated text was analysed for sentiment with VADER, yielding positive, neutral, negative, and compound sentiment scores for each tweet. We wanted a single real number for our sentiment visualization, so we stored only the compound sentiment score along with each tweet.\newline
 
-\textbf{PROCESSING DATA} 
+\textbf{Inspecting and processing data:} We now have all $tweets$ for all users, sorted by time and scored with compount sentiment $[(time, userId, sentiment, text), \dots]$. We gather together some useful information on the users from the graph and tweets into $users$. This includes the followers of that user (nodes connected through out-edges on the graph), and the average sentiment scores. A second average is made of non-zero sentiments.\newline
+The raw sentiment values of all tweets over time is shown in Figure 1. Manual inspection of zero-sentiment tweets showed that many were of low quality (tweets which were simply URLs, stripped characters, or poorly translated). Therefore, the zero-sentiment tweets were removed. The non-zero average for each user was then subtracted from each of that user's sentiments $s$:
 
+\[
+    s_{new} = s_{raw} - avg(s\in userTweets, s \neq 0)
+\]
+
+As our visualization is time based, we want to make sure we have sufficient tweet density for a useful visualization at a given time. Inspecting the timestamps of the tweets showed that less than 10\% of gathered tweets occured between 2009 and 2016 (see Figure X). The processed \textbf{tweets} list now consists only of non-neutral tweets from January 1, 2016 to the crawl date April 13, 2019, with sentiment scores normalized by user average.
+
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{raw_sentiments} % first figure itself
+        \caption{Raw sentiments}
+    \end{minipage}\hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{nnz_since_2016} % second figure itself
+        \caption{Processed sentiments}
+    \end{minipage}
+\end{figure}
 
 
 \subsection{Visualization}
@@ -142,6 +162,18 @@ Summarize the content of the report with a focus on the goal, analysis, and resu
 
 \appendix
 \section{\\Figures and tables}
+
+\begin{figure}[h!]
+    \centering
+     \includegraphics[width=0.5\textwidth]{nxgraph_unpopular_seed}
+        \caption{Highest PageRanked users from unpopular seed user}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+     \includegraphics[width=0.5\textwidth]{tweets_since_year}
+        \caption{Percentage of total tweets captured by starting year}
+\end{figure}
 
 \section{\\References}
 \end{document}
