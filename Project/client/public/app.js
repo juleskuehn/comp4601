@@ -154,20 +154,41 @@ d3.json("graph.json", function (error, graph) {
       .style(towhite, "white");
     
     
+    // Animation playback
+    let playing = false;
+    let timeoutPromise = null;
+    let currentTimeWindowIndex = -1;
     document.getElementById('play-button').addEventListener('click', async () => {
-      for (const timeWindow of timeWindows) {
+      if (playing) {
+        playing = false;
+        console.log('hi');
+        timeoutPromise && timeoutPromise.cancel();
+        return;
+      }
+      playing = true;
+      if (currentTimeWindowIndex === timeWindows.length - 1) {
+        currentTimeWindowIndex = -1;
+      }
+      while (playing) {
+        currentTimeWindowIndex++;
+        const timeWindow = timeWindows[currentTimeWindowIndex];
         circle
           .transition()
           .duration(transitionDuration)
           .style("fill", (o) => {
             const nextSentiment = timeWindow[o.id];
             if (!isValidSentiment(nextSentiment)) {
-              return colorFromSentiment(o.sentiment); 
+              return colorFromSentiment(o.sentiment);
             }
             o.sentiment = nextSentiment; // Maybe change
             return colorFromSentiment(nextSentiment);
           });
-        await timeout(transitionDuration);
+        if (currentTimeWindowIndex === timeWindows.length - 1) {
+          playing = false;
+          break;
+        }
+        timeoutPromise = timeout(transitionDuration);
+        await timeoutPromise;
       }
     });
 
@@ -385,9 +406,15 @@ function isNumber(n) {
  * @param {Number} millis - Milliseconds to wait
  */
 export const timeout = (millis) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, millis);
+  let id = null;
+  const timeoutPromise = new Promise((resolve) => {
+    id = setTimeout(resolve, millis);
   });
+  timeoutPromise.id = id;
+  timeoutPromise.cancel = () => {
+    clearTimeout(timeoutPromise.id);
+  };
+  return timeoutPromise;
 }
 
 /**
