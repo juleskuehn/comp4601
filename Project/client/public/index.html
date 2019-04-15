@@ -46,10 +46,17 @@
 
     #ui-bottom {
       bottom: 0;
+      background: #fff;
     }
 
     #ui-top {
       top: 0;
+    }
+
+    .playpause {
+      zoom: 0.6;
+      margin-left: 20px;
+      margin-right: -10px
     }
 
     .playpause label {
@@ -82,8 +89,17 @@
     }
 
     #date-slider {
+      margin: 0;
+      width: 100%;
+      height: 70px;
+    }
+
+    #slider-container {
+      background: url('avg_2week.png');
+      background-size: 100% 100%;
       flex: 1;
-      margin: 0 40px;
+      margin: 0 20px;
+      height: 70px;
     }
   </style>
 </head>
@@ -101,7 +117,9 @@
       <input type="checkbox" value="None" checked="true" id="playpause" name="check"/>
       <label for="playpause" tabindex=1></label>
     </div>
-    <input id="date-slider" type="range" step="1" min="0" value="0"/>
+    <div id="slider-container">
+      <input id="date-slider" type="range" step="1" min="0" value="0"/>
+    </div>
     <div id="date-display"></div>
   </div>
   <script type="module" src="app.js"></script>

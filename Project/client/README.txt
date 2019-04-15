@@ -36,3 +36,7 @@ https://colab.research.google.com/drive/18_LHfXRtiGl6GhKCwuugi0DnNup70vhJ
 
 Data post-procesing, plotting:
 https://colab.research.google.com/drive/1F5o1_Zg0t9H8LWUUc5fCkNwwpH37FBAE
+
+Additional data gathered from crawl:
+https://www.dropbox.com/sh/vh5jyionwd5aypx/AAANxnI-7WDrhDYvhiHLSQpIa?dl=0
+

@@ -167,33 +167,27 @@ To better understand the data, we plotted the averages for each of these windows
 \end{figure}
 
 \subsection{Visualization}
-Add this \dots\newline
-
-Include figures of some sentiment bouncing around a local community over adjacent time window, confirming 2nd paragraph of Discussion below. I can do figures syntax
 
 \subsubsection{Tools employed}
 node, d3.js
 
 \subsubsection{Methodology}
-force directed graph\newline
-
-how data was processed from what i provided
 
 d3.js is a powerful data visualization library that specializes in creating complex and dynamic data representations.
 For our visualization we used a force directed graph for it's ability to display a large amount of connected data that is still
-visually digestible and aesthetically pleasing.
+visually digestible and aesthetically pleasing.\newline
 
 Even with a powerful library like d3.js, it can still be very difficult to construct a graph that animates over time with the data.
-We started with some base code that gave us the basic style and format of the graph [https://observablehq.com/@d3/force-directed-graph].
+We started with some base code that gave us the basic style and format of the graph [6].\newline
 
 The initial static construction of the graph was fairly trivial. The sentiment value of each node was interpolated as a color, with -1
-being bright red, and 1 being bright green. True neutral values were given gray.
+being bright red, and 1 being bright green. True neutral values were given gray.\newline
 
 Connections in d3 graphs are constructed as a list of sources and targets. For our sources, we used the followers, our targets 
-were the people being followed. A client side preprocessing step was needed to build this list.
+were the people being followed. A client side preprocessing step was needed to build this list.\newline
 
 To add animation to the graph, we loop through the rolling average windows and interpolate the color between subsequent sentiments
-in subsequent windows. Each window takes a certain length of time to animate between which can be adjusted with the "Speed" input.
+in subsequent windows. Each window takes a certain length of time to animate between which can be adjusted with the "Speed" input.\newline
 
 We also added the ability to choose and visualize a specific date, and visualize where along the entire canonical time period of the data
 you were currently with the addition of the range slider. Different windows can be scrubbed to with the slider, and the corresponding
@@ -258,6 +252,8 @@ https://github.com/ytakashina/twicrawler.\newline
 [4] Tsugawa, Sho, and Hiroyuki Ohsaki. “Negative Messages Spread Rapidly and Widely on Social Media,” 151–60, 2015. https://doi.org/10.1145/2817946.2817962.\newline
 
 [5] Zmick, David. tweet\_dumper.py. Python, 2019. https://github.com/dpzmick/one-liners.
+
+[6] “Force-Directed Graph,” November 15, 2017. https://observablehq.com/@d3/force-directed-graph.
 
 
 \end{document}
