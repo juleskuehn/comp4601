@@ -171,6 +171,26 @@ To better understand the data, we graphed the averages for each of these windows
 
 \subsection{Visualization}
 
+d3.js is a powerful data visualization library that specializes in creating complex and dynamic data representations.
+For our visualization we used a force directed graph for it's ability to display a large amount of connected data that is still
+visually digestible and aesthetically pleasing.
+
+Even with a powerful library like d3.js, it can still be very difficult to construct a graph that animates over time with the data.
+We started with some base code that gave us the basic style and format of the graph [https://observablehq.com/@d3/force-directed-graph].
+
+The initial static construction of the graph was fairly trivial. The sentiment value of each node was interpolated as a color, with -1
+being bright red, and 1 being bright green. True neutral values were given gray.
+
+Connections in d3 graphs are constructed as a list of sources and targets. For our sources, we used the followers, our targets 
+were the people being followed. A client side preprocessing step was needed to build this list.
+
+To add animation to the graph, we loop through the rolling average windows and interpolate the color between subsequent sentiments
+in subsequent windows. Each window takes a certain length of time to animate between which can be adjusted with the "Speed" input.
+
+We also added the ability to choose and visualize a specific date, and visualize where along the entire canonical time period of the data
+you were currently with the addition of the range slider. Different windows can be scrubbed to with the slider, and the corresponding
+sentiment colors are rendered to the nodes.
+
 
 \section{Discussion}
 This is the opportunity to showcase analysis or resulting benefits from your project implementation. Without getting into Future Work too much, briefly discuss what setbacks and desires your project implementation experience has left you with. Other than that not much advice on discussion; varies by project scope. 

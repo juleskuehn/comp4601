@@ -216,7 +216,11 @@ d3.json("graph.json", function (error, graph) {
           }
           o.sentiment = sentiment; // Maybe change
           return colorFromSentiment(sentiment);
-        });
+        })
+        // .style("opacity", (o) => {
+        //   const sentiment = timeWindows[timeWindowIndex][o.id];
+        //   return sentiment ? 1 : highlight_trans;
+        // });
     };
 
     const setTimeWindow = (index) => {
