@@ -45,7 +45,11 @@
 
 <body>
   <!-- Load app script -->
-  <div id="ui"><button id="play-button">Start animation</button></div>
+  <div id="ui">
+    <button id="play-button">Start animation</button>
+    <input id="date-slider" type="range" step="1" min="0" value="0"/>
+    <div id="date-display"></div>
+  </div>
   <script type="module" src="app.js"></script>
 </body>
 

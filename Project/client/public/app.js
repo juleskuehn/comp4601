@@ -54,7 +54,7 @@ svg.style("cursor", "move");
 
 d3.json("graph.json", function (error, graph) {
 
-  d3.json("rolling_averages.json", (error, averages) => {
+  d3.json("rolling_averages_2week.json", (error, averages) => {
 
     // Compute array of time windows
     const timeWindows = [];
@@ -154,43 +154,80 @@ d3.json("graph.json", function (error, graph) {
       .style(towhite, "white");
     
     
+    
+    let currentTimeWindowIndex;
+    
+    // Setup date display and range slider
+    const dateSlider = document.getElementById('date-slider');
+    const dateDisplay = document.getElementById('date-display');
+
+    const setDateInput = (dateIndex) => {
+      const date = new Date(parseInt(timeWindows[dateIndex].timestamp * 1000));
+      dateDisplay.textContent = `${date.toDateString()} ${date.toLocaleTimeString()}`;
+    };
+
+    const setSliderValue = (value) => {
+      dateSlider.value = value;
+    };
+
+    dateSlider.max = timeWindows.length - 1;
+
+    dateSlider.addEventListener('input', (e) => {
+      setTimeWindow(e.target.value);
+    });
+
+    
     // Animation playback
+    const setCircleColors = (timeWindowIndex) => {
+      circle
+        .transition()
+        .duration(transitionDuration)
+        .style("fill", (o) => {
+          const sentiment = timeWindows[timeWindowIndex][o.id];
+          if (!isValidSentiment(sentiment)) {
+            return colorFromSentiment(o.sentiment);
+          }
+          o.sentiment = sentiment; // Maybe change
+          return colorFromSentiment(sentiment);
+        });
+    };
+
+    const setTimeWindow = (index) => {
+      console.log(index);
+      const _index = parseInt(index);
+      currentTimeWindowIndex = _index;
+
+      // Side effects
+      setCircleColors(_index);
+      setSliderValue(_index);
+      setDateInput(_index);
+    }
+
     let playing = false;
     let timeoutPromise = null;
-    let currentTimeWindowIndex = -1;
+    setTimeWindow(0);
     document.getElementById('play-button').addEventListener('click', async () => {
       if (playing) {
         playing = false;
-        console.log('hi');
         timeoutPromise && timeoutPromise.cancel();
         return;
       }
       playing = true;
       if (currentTimeWindowIndex === timeWindows.length - 1) {
-        currentTimeWindowIndex = -1;
+        setTimeWindow(0);
       }
       while (playing) {
-        currentTimeWindowIndex++;
-        const timeWindow = timeWindows[currentTimeWindowIndex];
-        circle
-          .transition()
-          .duration(transitionDuration)
-          .style("fill", (o) => {
-            const nextSentiment = timeWindow[o.id];
-            if (!isValidSentiment(nextSentiment)) {
-              return colorFromSentiment(o.sentiment);
-            }
-            o.sentiment = nextSentiment; // Maybe change
-            return colorFromSentiment(nextSentiment);
-          });
         if (currentTimeWindowIndex === timeWindows.length - 1) {
           playing = false;
           break;
         }
+        setTimeWindow(currentTimeWindowIndex + 1);
         timeoutPromise = timeout(transitionDuration);
         await timeoutPromise;
       }
     });
+
+
 
     var text = g.selectAll(".text")
       .data(graph.nodes)
