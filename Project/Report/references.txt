@@ -1,0 +1,12 @@
+references
+
+Tsugawa and Ohsaki
+
+Vader
+
+twicrawler {https://github.com/ytakashina/twicrawler}]
+
+\url{https://github.com/dpzmick/one-liners/blob/master/tweet_dumper.py}
+
+"(Almost) Real-Time Twitter Sentiment Analysis with Tweep \& Vader"
+

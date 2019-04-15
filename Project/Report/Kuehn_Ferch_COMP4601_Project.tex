@@ -109,7 +109,7 @@ Twitter's free API was sufficient for extracting 400 users and up to 3200 tweets
 
 \subsubsection{Methodology}
 
-\textbf{Seed user:} First, we identified a seed node. After some experimentation with using popular celebrity accounts as seed nodes, quick inspection of the resultant graph showed that it was too broad and not deep enough for the desired visualization. We found that using a normal, less popular user resulted in a graph better conforming to our intent (See Figure X). This user was selected by browsing followers of the City of Ottawa account. Our seed user is local to Ottawa, and has only 2 tweets and 13 followers. (In retrospect, a user with more moderate activity (hundreds of tweets, dozens of followers) would have likely produced better results.)\newline
+\textbf{Seed user:} First, we identified a seed node. After some experimentation with using popular celebrity accounts as seed nodes, quick inspection of the resultant graph showed that it was too broad and not deep enough for the desired visualization. We found that using a normal, less popular user resulted in a graph better conforming to our intent (See Figure 5). This user was selected by browsing followers of the City of Ottawa account. Our seed user is local to Ottawa, and has only 2 tweets and 13 followers. (In retrospect, a user with more moderate activity (hundreds of tweets, dozens of followers) would have likely produced better results.)\newline
 
 \textbf{Building a graph:} Crawling the user graph had already been implemented simply in Python by Yuya Takashina's twicrawler[3]. We used this as base code, making modifications to crawl 'forward' through a potential chain of influence by adding a seed user's followers to a priority queue. The priority was determined by the PageRank score of that user's node in the partially acquired social graph. The aim was to process more popular users first, as we assumed these users would be of higher quality and influence.
 
@@ -126,7 +126,7 @@ The raw sentiment values of all tweets over time is shown in Figure 1. Manual in
     s_{new} = s_{raw} - avg(s\in tweets_{user}, s \neq 0)
 \]
 
-As our visualization is time based, we want to make sure we have sufficient tweet density for a useful visualization at a given time. Inspecting the timestamps of the tweets showed that less than 10\% of gathered tweets occured between 2009 and 2016 (see Figure X). The processed \textbf{tweets} list now consists only of non-neutral tweets from January 1, 2016 to the crawl date April 13, 2019, with sentiment scores normalized by user average. We are left with 61.6\% of the total tweets gathered, but de-noised and with sentiment value somewhat exagerrated, making it easier to visualize change in sentiment.
+As our visualization is time based, we want to make sure we have sufficient tweet density for a useful visualization at a given time. Inspecting the timestamps of the tweets showed that less than 10\% of gathered tweets occured between 2009 and 2016 (see Figure 6). The processed \textbf{tweets} list now consists only of non-neutral tweets from January 1, 2016 to the crawl date April 13, 2019, with sentiment scores normalized by user average. We are left with 61.6\% of the total tweets gathered, but de-noised and with sentiment value somewhat exagerrated, making it easier to visualize change in sentiment.
 
 \begin{figure}[h!]
     \centering
@@ -152,7 +152,7 @@ The time granularity of this data was very fine (by second) at this point, makin
 
 Users who did not make any tweets in that time window are not given an average sentiment for that window.\newline
 
-To better understand the data, we plotted the averages for each of these windows. We can see that increasing the window size shows less granular trends over months while the smallest window size shows more granular trends over weeks and even days (see Figures X-X).
+To better understand the data, we plotted the averages for each of these windows. We can see that increasing the window size shows less granular trends over months while the smallest window size shows more granular trends over weeks and even days (see Figures 3 and 4).
 
 \begin{figure}[h!]
     \centering
@@ -183,7 +183,7 @@ how data was processed from what i provided
 \section{Discussion}
 The windowed averages shown in Figures X-X demonstrate that sentiment trends have definitely been captured in the data. We can infer that certain historical events caused certain shifts in overall sentiment by looking at the dates, and also see different users react to those events in terms of change in their sentiment.\newline
 
-Close visual inspection of clusters over time indicates that there is some relationship between adjacent users' average sentiments (see Figure X-X). Specifically, changes in the sentiment of adjacent users often occurs sequentially over a few windows. Since there are bidirectional relationships present, it is difficult to make a strong judgement on our initial hypothesis: that (negative) sentiment spreads between socially adjacent users over time, that is, directional relationships.\newline
+Close visual inspection of clusters over time indicates that there is some relationship between adjacent users' average sentiments (see Figures X-X). Specifically, changes in the sentiment of adjacent users often occurs sequentially over a few windows. Since there are bidirectional relationships present, it is difficult to make a strong judgement on our initial hypothesis: that (negative) sentiment spreads between socially adjacent users over time, that is, directional relationships.\newline
 
 We can see that certain sentiments appear in certain socially adjacent groups around the same time, independently of the overall average sentiment. This implies that you are more likely to share sentiment over a window of time with those in your close social community than with random other users, and that the community, even sampled from a single seed, is heterogenous while still showing clear overall trends.\newline
 
@@ -212,7 +212,7 @@ Additionally, we found that certain socially-close communities of sentiment-over
 We found that visualizing sentiment over the Twitter user graph is illuminating and compelling. By publishing an example of crawling and processing code on Google Colaboratory, others can gather larger datasets, perhaps ones focusing on specific communities. By publishing our visualization code on GitHub, we provide a full solution for visualizing sentiment on parts of the social graph which are of interest to the user with minimal fuss.
 
 \appendix
-\section{\\Figures and tables}
+\section{\\Appendix}
 
 \begin{figure}[h!]
     \centering
@@ -232,7 +232,8 @@ We found that visualizing sentiment over the Twitter user graph is illuminating 
 
 [2] Rovai, Marcelo. “(Almost) Real-Time Twitter Sentiment Analysis with Tweep \& Vader.” Towards Data Science, December 27, 2018. https://towardsdatascience.com/almost-real-time-twitter-sentiment-analysis-with-tweep-vader-f88ed5b93b1c.\newline
 
-[3] Takashina, Yuya. Crawling the Social Graph on Twitter. Jupyter Notebook, 2017. https://github.com/ytakashina/twicrawler.\newline
+[3] Takashina, Yuya. Crawling the Social Graph on Twitter. Jupyter Notebook, 2017.\newline
+https://github.com/ytakashina/twicrawler.\newline
 
 [4] Tsugawa, Sho, and Hiroyuki Ohsaki. “Negative Messages Spread Rapidly and Widely on Social Media,” 151–60, 2015. https://doi.org/10.1145/2817946.2817962.\newline
 
