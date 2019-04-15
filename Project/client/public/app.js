@@ -5,7 +5,7 @@ var keyc = true, keys = true, keyt = true, keyr = true, keyx = true, keyd = true
 
 var focus_node = null, highlight_node = null;
 
-var text_center = false;
+//var text_center = false;
 var outline = false;
 
 var min_sentiment = -1;
@@ -26,10 +26,14 @@ var radius = d3.scale.sqrt()
   .range([0, 6]);
 
 Number.prototype.map = function (in_min, in_max, out_min, out_max) {
+  if (this > in_max) return out_max;
+  if (this < in_min) return out_min;
   return (this - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-const transitionDuration = 200;
+
+let defaultSpeed = 50;
+let transitionDuration = defaultSpeed.map(1, 100, 1000, 10);
 
 var force = d3.layout.force()
   .size([w, h])
@@ -51,6 +55,19 @@ var svg = d3.select("body").append("svg");
 var zoom = d3.behavior.zoom().scaleExtent([min_zoom, max_zoom])
 var g = svg.append("g");
 svg.style("cursor", "move");
+
+svg.append("svg:defs").selectAll("marker")
+  .data(["end"])      // Different link/path types can be defined here
+  .enter().append("svg:marker")    // This section adds in the arrows
+  .attr("id", String)
+  .attr("viewBox", "0 -5 10 10")
+  .attr("refX", 22)
+  .attr("refY", 0)
+  .attr("markerWidth", 5)
+  .attr("markerHeight", 5)
+  .attr("orient", "auto")
+  .append("svg:path")
+  .attr("d", "M0,-5L10,0L0,5");
 
 d3.json("graph.json", function (error, graph) {
 
@@ -77,7 +94,7 @@ d3.json("graph.json", function (error, graph) {
 
     graph.nodes.forEach(function (node) {
       nodeById.set(node.id, node);
-      node.size = node.followers.length.map(0, 5, 1, 10);
+      node.size = node.followers.length.map(0, 100, 8, 20);
     });
 
     links.forEach(function (link) {
@@ -111,6 +128,7 @@ d3.json("graph.json", function (error, graph) {
       .data(links)
       .enter().append("line")
       .attr("class", "link")
+      //.attr("marker-end", "url(#end)")
       .style("stroke-width", nominal_stroke)
       .style("stroke", function (d) {
         if (d.sentiment === 0.0) return default_node_color;
@@ -141,7 +159,7 @@ d3.json("graph.json", function (error, graph) {
 
     var circle = node.append("path")
       .attr("d", d3.svg.symbol()
-        .size(function (d) { return Math.PI * Math.pow(size(d.size) || nominal_base_node_size, 2); })
+        .size(function (d) { return Math.PI * Math.pow(nominal_base_node_size, 2); })
         .type("circle"))
 
       .style(tocolor, function (d) {
@@ -160,20 +178,29 @@ d3.json("graph.json", function (error, graph) {
     // Setup date display and range slider
     const dateSlider = document.getElementById('date-slider');
     const dateDisplay = document.getElementById('date-display');
+    const speedInput = document.getElementById('speed');
+
+    dateSlider.max = timeWindows.length - 1;
+    speedInput.value = defaultSpeed;
 
     const setDateInput = (dateIndex) => {
       const date = new Date(parseInt(timeWindows[dateIndex].timestamp * 1000));
-      dateDisplay.textContent = `${date.toDateString()} ${date.toLocaleTimeString()}`;
+      dateDisplay.textContent = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     };
 
     const setSliderValue = (value) => {
       dateSlider.value = value;
     };
 
-    dateSlider.max = timeWindows.length - 1;
-
     dateSlider.addEventListener('input', (e) => {
       setTimeWindow(e.target.value);
+    });
+
+    speedInput.addEventListener('input', (e) => {
+      const speed = parseInt(e.target.value);
+      if (speed !== NaN && speed >= 1 && speed <= 100) {
+        transitionDuration = parseInt(e.target.value).map(1, 100, 1000, 10);
+      }
     });
 
     
@@ -193,7 +220,6 @@ d3.json("graph.json", function (error, graph) {
     };
 
     const setTimeWindow = (index) => {
-      console.log(index);
       const _index = parseInt(index);
       currentTimeWindowIndex = _index;
 
@@ -206,7 +232,7 @@ d3.json("graph.json", function (error, graph) {
     let playing = false;
     let timeoutPromise = null;
     setTimeWindow(0);
-    document.getElementById('play-button').addEventListener('click', async () => {
+    document.getElementById('playpause').addEventListener('click', async () => {
       if (playing) {
         playing = false;
         timeoutPromise && timeoutPromise.cancel();
@@ -229,18 +255,18 @@ d3.json("graph.json", function (error, graph) {
 
 
 
-    var text = g.selectAll(".text")
-      .data(graph.nodes)
-      .enter().append("text")
-      .attr("dy", ".35em")
-      .style("font-size", nominal_text_size + "px")
+    // var text = g.selectAll(".text")
+    //   .data(graph.nodes)
+    //   .enter().append("text")
+    //   .attr("dy", ".35em")
+    //   .style("font-size", nominal_text_size + "px")
 
-    if (text_center)
-      text.text(function (d) { return d.id; })
-        .style("text-anchor", "middle");
-    else
-      text.attr("dx", function (d) { return (size(d.size) || nominal_base_node_size); })
-        .text(function (d) { return '\u2002' + d.id; });
+    // if (text_center)
+    //   text.text(function (d) { return d.id; })
+    //     .style("text-anchor", "middle");
+    // else
+    //   text.attr("dx", function (d) { return (size(d.size) || nominal_base_node_size); })
+    //     .text(function (d) { return '\u2002' + d.id; });
 
     node.on("mouseover", function (d) {
       set_highlight(d);
@@ -262,7 +288,7 @@ d3.json("graph.json", function (error, graph) {
           if (highlight_trans < 1) {
 
             circle.style("opacity", 1);
-            text.style("opacity", 1);
+            //text.style("opacity", 1);
             link.style("opacity", 1);
           }
         }
@@ -276,7 +302,7 @@ d3.json("graph.json", function (error, graph) {
         svg.style("cursor", "move");
         if (highlight_color != "white") {
           circle.style(towhite, "white");
-          text.style("font-weight", "normal");
+          //text.style("font-weight", "normal");
           link.style("stroke", function (o) {
             return colorFromSentiment(o.sentiment);
           });
@@ -299,9 +325,9 @@ d3.json("graph.json", function (error, graph) {
           return isConnected(d, o) ? 1 : highlight_trans;
         });
 
-        text.style("opacity", function (o) {
-          return isConnected(d, o) ? 1 : highlight_trans;
-        });
+        // text.style("opacity", function (o) {
+        //   return isConnected(d, o) ? 1 : highlight_trans;
+        // });
 
         link.style("opacity", function (o) {
           return o.source.id === d.id || o.target.id === d.id ? 1 : highlight_trans;
@@ -319,9 +345,9 @@ d3.json("graph.json", function (error, graph) {
         circle.style(towhite, function (o) {
           return isConnected(d, o) ? highlight_color : "white";
         });
-        text.style("font-weight", function (o) {
-          return isConnected(d, o) ? "bold" : "normal";
-        });
+        // text.style("font-weight", function (o) {
+        //   return isConnected(d, o) ? "bold" : "normal";
+        // });
         link.style("stroke", function (o) {
           return o.source.id === d.id || o.target.id === d.id ? highlight_color : o.sentiment === 0.0 ? default_node_color : ((isNumber(o.sentiment) && o.sentiment >= -1 && o.sentiment <= 1) ? color(o.sentiment) : default_link_color);
         });
@@ -341,12 +367,11 @@ d3.json("graph.json", function (error, graph) {
         .size(function (d) { return Math.PI * Math.pow(size(d.size) * base_radius / nominal_base_node_size || base_radius, 2); })
         .type("circle"))
 
-      //circle.attr("r", function(d) { return (size(d.size)*base_radius/nominal_base_node_size||base_radius); })
-      if (!text_center) text.attr("dx", function (d) { return (size(d.size) * base_radius / nominal_base_node_size || base_radius); });
+      //if (!text_center) text.attr("dx", function (d) { return (size(d.size) * base_radius / nominal_base_node_size || base_radius); });
 
-      var text_size = nominal_text_size;
-      if (nominal_text_size * zoom.scale() > max_text_size) text_size = max_text_size / zoom.scale();
-      text.style("font-size", text_size + "px");
+      // var text_size = nominal_text_size;
+      // if (nominal_text_size * zoom.scale() > max_text_size) text_size = max_text_size / zoom.scale();
+      // text.style("font-size", text_size + "px");
 
       g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     });
@@ -360,7 +385,7 @@ d3.json("graph.json", function (error, graph) {
     force.on("tick", function () {
 
       node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
-      text.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+      //text.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
 
       link.attr("x1", function (d) { return d.source.x; })
         .attr("y1", function (d) { return d.source.y; })
@@ -399,25 +424,25 @@ d3.json("graph.json", function (error, graph) {
           case "0": key0 = !key0; break;
         }
 
-        link.style("display", function (d) {
-          var flag = vis_by_node_sentiment(d.source.sentiment) && vis_by_node_sentiment(d.target.sentiment);
-          linkedByIndex[d.source.id + ":" + d.target.id] = flag;
-          return flag ? "inline" : "none";
-        });
-        node.style("display", function (d) {
-          return (key0 || hasConnections(d)) && vis_by_node_sentiment(d.sentiment) ? "inline" : "none";
-        });
-        text.style("display", function (d) {
-          return (key0 || hasConnections(d)) && vis_by_node_sentiment(d.sentiment) ? "inline" : "none";
-        });
+        // link.style("display", function (d) {
+        //   var flag = vis_by_node_sentiment(d.source.sentiment) && vis_by_node_sentiment(d.target.sentiment);
+        //   linkedByIndex[d.source.id + ":" + d.target.id] = flag;
+        //   return flag ? "inline" : "none";
+        // });
+        // node.style("display", function (d) {
+        //   return (key0 || hasConnections(d)) && vis_by_node_sentiment(d.sentiment) ? "inline" : "none";
+        // });
+        // // text.style("display", function (d) {
+        // //   return (key0 || hasConnections(d)) && vis_by_node_sentiment(d.sentiment) ? "inline" : "none";
+        // // });
 
-        if (highlight_node !== null) {
-          if ((key0 || hasConnections(highlight_node)) && vis_by_node_sentiment(highlight_node.sentiment)) {
-            if (focus_node !== null) set_focus(focus_node);
-            set_highlight(highlight_node);
-          }
-          else { exit_highlight(); }
-        }
+        // if (highlight_node !== null) {
+        //   if ((key0 || hasConnections(highlight_node)) && vis_by_node_sentiment(highlight_node.sentiment)) {
+        //     if (focus_node !== null) set_focus(focus_node);
+        //     set_highlight(highlight_node);
+        //   }
+        //   else { exit_highlight(); }
+        // }
 
       }
     }
@@ -427,9 +452,9 @@ d3.json("graph.json", function (error, graph) {
 
 function vis_by_node_sentiment(sentiment) {
   if (isNumber(sentiment)) {
-    if (key1) return sentiment > 0.0;
-    if (key2) return sentiment < 0.0;
-    if (key3) return sentiment === 0.0;
+    if (keyl) return sentiment > 0.0;
+    if (keym) return sentiment < 0.0;
+    if (keyh) return sentiment === 0.0;
   }
   return true;
 }
