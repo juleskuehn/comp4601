@@ -25,12 +25,12 @@ var size = d3.scale.pow().exponent(1)
 var radius = d3.scale.sqrt()
   .range([0, 6]);
 
+// Map a range of values onto another one
 Number.prototype.map = function (in_min, in_max, out_min, out_max) {
   if (this > in_max) return out_max;
   if (this < in_min) return out_min;
   return (this - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 
 let defaultSpeed = 50;
 let transitionDuration = defaultSpeed.map(1, 100, 1000, 10);
@@ -82,25 +82,25 @@ d3.json("graph.json", function (error, graph) {
     // Sort by increasing timestamp
     timeWindows.sort((value) => value.timestamp);
 
+    // Index nodes by id
+    var nodeById = new Map();
+    graph.nodes.forEach(function (node) {
+      nodeById.set(node.id, node);
+
+      // While we're at it, set the size.
+      // This is not actually rendered, just used to calculate
+      // link distance
+      node.size = node.followers.length.map(0, 100, 8, 20);
+    });
+
     // Compute links
     const links = [];
     for (const node of graph.nodes) {
       for (const follower of node.followers) {
-        links.push({ source: follower, target: node.id });
+        links.push({ source: nodeById.get(follower), target: node });
       }
     }
 
-    var nodeById = d3.map();
-
-    graph.nodes.forEach(function (node) {
-      nodeById.set(node.id, node);
-      node.size = node.followers.length.map(0, 100, 8, 20);
-    });
-
-    links.forEach(function (link) {
-      link.source = nodeById.get(link.source);
-      link.target = nodeById.get(link.target);
-    });
 
     var linkedByIndex = {};
     links.forEach(function (d) {
@@ -128,6 +128,7 @@ d3.json("graph.json", function (error, graph) {
       .data(links)
       .enter().append("line")
       .attr("class", "link")
+      // Uncomment for arrows
       //.attr("marker-end", "url(#end)")
       .style("stroke-width", nominal_stroke)
       .style("stroke", function (d) {
@@ -157,28 +158,37 @@ d3.json("graph.json", function (error, graph) {
       towhite = "fill"
     }
 
+    function isValidSentiment(sentiment) {
+      return sentiment && isNumber(sentiment) && sentiment >= -1 && sentiment <= 1;
+    }
+
+    function colorFromSentiment(sentiment) {
+      if (sentiment === 0.0) return default_node_color;
+      return isValidSentiment(sentiment) ? color(sentiment) : default_link_color
+    }
+
     var circle = node.append("path")
       .attr("d", d3.svg.symbol()
         .size(function (d) { return Math.PI * Math.pow(nominal_base_node_size, 2); })
         .type("circle"))
 
       .style(tocolor, function (d) {
-        if (d.sentiment === 0.0) return default_node_color;
-        else if (isNumber(d.sentiment) && d.sentiment >= -1 && d.sentiment <= 1) return color(d.sentiment);
-        else return default_node_color;
+        return colorFromSentiment(d.sentiment);
       })
       //.attr("r", function(d) { return size(d.size)||nominal_base_node_size; })
       .style("stroke-width", nominal_stroke)
       .style(towhite, "white");
     
     
-    
+    /** UI and Animation stuff **/
+
     let currentTimeWindowIndex;
     
-    // Setup date display and range slider
+    // Setup date display, range slider, and speed input
     const dateSlider = document.getElementById('date-slider');
     const dateDisplay = document.getElementById('date-display');
     const speedInput = document.getElementById('speed');
+    const playpause = document.getElementById('playpause');
 
     dateSlider.max = timeWindows.length - 1;
     speedInput.value = defaultSpeed;
@@ -203,8 +213,6 @@ d3.json("graph.json", function (error, graph) {
       }
     });
 
-    
-    // Animation playback
     const setCircleColors = (timeWindowIndex) => {
       circle
         .transition()
@@ -214,13 +222,12 @@ d3.json("graph.json", function (error, graph) {
           if (!isValidSentiment(sentiment)) {
             return colorFromSentiment(o.sentiment);
           }
-          o.sentiment = sentiment; // Maybe change
           return colorFromSentiment(sentiment);
         })
-        // .style("opacity", (o) => {
-        //   const sentiment = timeWindows[timeWindowIndex][o.id];
-        //   return sentiment ? 1 : highlight_trans;
-        // });
+        .style("opacity", (o) => {
+          const sentiment = timeWindows[timeWindowIndex][o.id];
+          return sentiment ? 1 : highlight_trans;
+        });
     };
 
     const setTimeWindow = (index) => {
@@ -233,23 +240,28 @@ d3.json("graph.json", function (error, graph) {
       setDateInput(_index);
     }
 
-    let playing = false;
-    let timeoutPromise = null;
     setTimeWindow(0);
-    document.getElementById('playpause').addEventListener('click', async () => {
+
+
+    let playing = false;
+
+    const setPlaying = (isPlaying) => {
+      playing = isPlaying;
+      playpause.checked = !isPlaying;
+    };
+
+    let timeoutPromise = null;
+    playpause.addEventListener('click', async () => {
       if (playing) {
-        playing = false;
+        setPlaying(false);
         timeoutPromise && timeoutPromise.cancel();
         return;
       }
-      playing = true;
-      if (currentTimeWindowIndex === timeWindows.length - 1) {
-        setTimeWindow(0);
-      }
+      setPlaying(true);
       while (playing) {
         if (currentTimeWindowIndex === timeWindows.length - 1) {
-          playing = false;
-          break;
+          setPlaying(false);
+          return;
         }
         setTimeWindow(currentTimeWindowIndex + 1);
         timeoutPromise = timeout(transitionDuration);
@@ -312,15 +324,6 @@ d3.json("graph.json", function (error, graph) {
           });
         }
       }
-    }
-
-    function isValidSentiment(sentiment) {
-      return sentiment && isNumber(sentiment) && sentiment >= -1 && sentiment <= 1;
-    }
-
-    function colorFromSentiment(sentiment) {
-      if (sentiment === 0.0) return default_node_color;
-      return isValidSentiment(sentiment) ? color(sentiment) : default_link_color
     }
 
     function set_focus(d) {
